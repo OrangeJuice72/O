@@ -37,55 +37,50 @@
       margin:0;
       min-height:100vh;
       overscroll-behavior: none;
-      display:grid;
-      place-items:center;
+      display:flex;
+      flex-direction: column;
+      align-items: center;
       background: linear-gradient(-45deg, #070b14, #1b1233, #081519, #0a1126);
       background-size: 400% 400%;
       animation: gradientBG 20s ease infinite;
       color:var(--text);
       font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       overflow-x: hidden;
-      padding: 20px 0;
+      padding: 40px 20px;
     }
     
     .wrap{
-      width: min(1400px, 98vw);
-      display: grid;
-      gap: 20px;
-      grid-template-columns: 260px 1fr 260px;
-      align-items: start;
+      width: min(1000px, 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
       position: relative;
       z-index: 10;
     }
-    
-    @media (max-width: 1050px){ 
-      .wrap{ grid-template-columns: 1fr; gap: 30px; } 
-      .slot-container { order: -1; } 
+
+    .header-text {
+      text-align: center;
+      margin-bottom: 10px;
     }
+    h1{ font-size:28px; margin:0 0 8px; letter-spacing:.5px; line-height: 1.2; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+    p{ margin:0; color:var(--muted); font-size: 15px; }
 
     .card{
       background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
       border: 1px solid rgba(255,255,255,.15);
       border-radius:24px;
-      padding:20px;
+      padding:24px;
       box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.05);
       backdrop-filter: blur(12px);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+      width: 100%;
     }
-    
-    h1{ font-size:26px; margin:0 0 4px; letter-spacing:.5px; line-height: 1.2; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
-    p{ margin:0 0 12px; color:var(--muted); font-size: 14px; }
     
     /* SLOT MACHINE STYLES */
     .slot-container {
       display: flex;
-      flex-direction: column;
       justify-content: center;
-      align-items: center;
       width: 100%;
-      gap: 20px;
     }
 
     .slot-machine {
@@ -187,10 +182,18 @@
 
     .spinning .reel-strip { filter: blur(2px); }
     
-    .action-stack{ display:flex; flex-direction:column; gap:12px; }
+    /* SPIN & RESULT LAYOUT */
+    .action-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 600px;
+      gap: 16px;
+    }
     
-    /* CHILL SPIN BUTTON */
     button.main-spin {
+      width: 100%;
       border: 0;
       border-radius: 100px;
       cursor: pointer;
@@ -199,8 +202,8 @@
       background: linear-gradient(180deg, #ffe08a, #ffba08);
       box-shadow: 0 6px 0 #cc8b00, 0 15px 25px rgba(255,209,102,.2);
       transition: transform .1s ease, box-shadow .1s ease, filter .2s;
-      font-size: 20px;
-      padding: 18px;
+      font-size: 22px;
+      padding: 20px;
       text-transform: uppercase;
       letter-spacing: 1.5px;
       touch-action: manipulation; 
@@ -211,6 +214,72 @@
       box-shadow: 0 0px 0 #cc8b00, 0 5px 10px rgba(255,209,102,.2); 
     }
     button.main-spin:disabled { filter: grayscale(0.8) brightness(0.7); cursor: not-allowed; }
+    
+    .result{
+      padding:20px;
+      border-radius:20px;
+      border:1px solid rgba(138,92,255,.4);
+      background: rgba(138,92,255,.15);
+      display:flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap:8px;
+      width: 100%;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 30px rgba(138,92,255,0.1);
+    }
+    .result.win-pop {
+      transform: scale(1.03);
+      border-color: var(--accent);
+      background: rgba(255, 209, 102, 0.15);
+      box-shadow: 0 0 30px rgba(255,209,102,0.2);
+    }
+
+    .result-text { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+    .result b{ font-size:18px; color: #fff; line-height: 1.4; transition: color 0.3s; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-weight: 800; display: block; word-wrap: break-word; }
+
+    /* CATEGORIES GRID */
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      width: 100%;
+    }
+
+    .field{
+      display:flex;
+      flex-direction: column;
+      gap:8px;
+      padding:16px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.3);
+    }
+    .field label{
+      font-size:12px;
+      letter-spacing:.5px;
+      color:var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: center;
+    }
+    
+    select, textarea{
+      border-radius:12px;
+      padding:12px 10px;
+      background: rgba(12, 16, 30, 0.8);
+      border:1px solid rgba(255,255,255,.2);
+      color:var(--text);
+      outline:none;
+      width: 100%;
+      font-weight: 600;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+    select option { text-align: left; }
+    textarea{ min-height:100px; resize:vertical; font-family: inherit; text-align: left; }
+    textarea:focus{ border-color: var(--accent); }
     
     button.ghost{
       border: 1px solid rgba(255,255,255,.15);
@@ -226,88 +295,32 @@
     button.ghost:hover { background: rgba(255,255,255,0.1); }
     button.ghost:active { transform: translateY(4px); box-shadow: 0 0px 0 rgba(0,0,0,0.4); }
     
-    .field{
-      width:100%;
-      display:grid;
-      gap:6px;
-      padding:12px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.3);
-    }
-    .field label{
-      font-size:12px;
-      letter-spacing:.5px;
-      color:var(--muted);
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      align-items:center;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    
-    select, textarea{
-      border-radius:12px;
-      padding:10px 12px;
-      background: rgba(12, 16, 30, 0.8);
-      border:1px solid rgba(255,255,255,.2);
-      color:var(--text);
-      outline:none;
-      width: 100%;
-      font-weight: 600;
-      box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
-    }
-    textarea{ min-height:90px; resize:vertical; font-family: inherit; }
-    textarea:focus{ border-color: var(--accent); }
-    
-    .result{
-      margin-top:auto;
-      padding:16px;
-      border-radius:16px;
-      border:1px solid rgba(138,92,255,.4);
-      background: rgba(138,92,255,.15);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      width: 100%;
-      transition: all 0.3s ease;
-      box-shadow: 0 10px 30px rgba(138,92,255,0.1);
-    }
-    .result.win-pop {
-      transform: scale(1.03);
-      border-color: var(--accent);
-      background: rgba(255, 209, 102, 0.15);
-      box-shadow: 0 0 30px rgba(255,209,102,0.2);
-    }
-
-    .result-text { display: flex; flex-direction: column; gap: 6px; width: 100%; }
-    .result b{ font-size:15px; color: #fff; line-height: 1.4; transition: color 0.3s; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-weight: 800; display: block; word-wrap: break-word; }
-    
+    /* EDIT LAB */
     .edit-lab {
       width: 100%;
-      max-width: 780px; 
       background: rgba(0,0,0,0.3);
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 20px;
-      padding: 16px;
+      padding: 24px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
       box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
     }
     .edit-lab-header { display: flex; justify-content: space-between; align-items: center; }
-    .edit-lab label { font-size: 14px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
-    .edit-lab .controls { display: flex; gap: 10px; }
-    .edit-lab select { padding: 8px 12px; font-size: 13px; width: auto; }
-    .edit-lab button { padding: 8px 16px; font-size: 14px; }
+    .edit-lab label { font-size: 16px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
+    .edit-lab .controls { display: flex; gap: 10px; align-items: center; }
+    .edit-lab select { padding: 10px 14px; font-size: 14px; width: auto; text-align: left; }
+    .edit-lab button { padding: 10px 20px; font-size: 14px; }
 
     /* MOBILE TWEAKS */
+    @media (max-width: 900px) {
+      .categories-grid { grid-template-columns: repeat(3, 1fr); }
+    }
     @media (max-width: 600px) {
       :root { var(--item-height): 60px; }
-      body { padding: 10px; }
-      .wrap { gap: 16px; width: 100%; }
+      body { padding: 20px 10px; }
+      .wrap { gap: 24px; }
       .card { padding: 16px; border-radius: 20px; }
       .slot-machine { padding: 10px; gap: 4px; border-radius: 16px; }
       
@@ -315,80 +328,23 @@
       .slot-item { font-size: 10px; letter-spacing: -0.5px; padding: 0 1px; }
       
       h1 { font-size: 24px; }
-      button.main-spin { font-size: 18px; padding: 14px; }
-      .edit-lab { padding: 12px; border-radius: 16px; }
-      .edit-lab .controls { flex-direction: column; width: 50%; }
-      .edit-lab select { width: 100%; }
+      button.main-spin { font-size: 18px; padding: 16px; }
+      
+      .categories-grid { grid-template-columns: repeat(2, 1fr); }
+      .categories-grid .field:last-child { grid-column: span 2; } /* Centers the 5th item */
+      
+      .edit-lab { padding: 16px; }
+      .edit-lab-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .edit-lab .controls { width: 100%; display: grid; grid-template-columns: 1fr auto; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     
-    <div class="card" style="height: 100%;">
-      <div>
-        <h1>🧠 Creative Muse</h1>
-        <p>Pull the lever and spin the idea engine! 😈</p>
-      </div>
-
-      <div class="field">
-        <label>Reel 1 Theme</label>
-        <select id="cat1">
-          <option value="actions">Actions 🎬</option>
-          <option value="animals">Animals 🐺</option>
-          <option value="body">Body Features 👁️</option>
-          <option value="colors">Colors 🎨</option>
-          <option value="emotions">Emotions 🎭</option>
-          <option value="romance">Romance & Passion 💖</option>
-          <option value="styles" selected>Image Styles 🖌️</option>
-          <option value="music">Music Genres 🎧</option>
-          <option value="numbers">Numbers 🔢</option>
-          <option value="objects">Objects 🔮</option>
-          <option value="places">Places 🗺️</option>
-          <option value="roles">Roles 👑</option>
-          <option value="sizes">Sizes 📏</option>
-          <option value="spooky">Spooky 👻</option>
-          <option value="subjects">Subjects 🌌</option>
-          <option value="titles">Titles 📜</option>
-          <option value="custom1">Custom 1 📝</option>
-          <option value="custom2">Custom 2 📝</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>Reel 2 Theme</label>
-        <select id="cat2">
-          <option value="actions">Actions 🎬</option>
-          <option value="animals">Animals 🐺</option>
-          <option value="body">Body Features 👁️</option>
-          <option value="colors">Colors 🎨</option>
-          <option value="emotions">Emotions 🎭</option>
-          <option value="romance">Romance & Passion 💖</option>
-          <option value="styles">Image Styles 🖌️</option>
-          <option value="music">Music Genres 🎧</option>
-          <option value="numbers">Numbers 🔢</option>
-          <option value="objects">Objects 🔮</option>
-          <option value="places">Places 🗺️</option>
-          <option value="roles">Roles 👑</option>
-          <option value="sizes">Sizes 📏</option>
-          <option value="spooky">Spooky 👻</option>
-          <option value="subjects" selected>Subjects 🌌</option>
-          <option value="titles">Titles 📜</option>
-          <option value="custom1">Custom 1 📝</option>
-          <option value="custom2">Custom 2 📝</option>
-        </select>
-      </div>
-
-      <div class="action-stack" style="margin-top: 10px;">
-        <button id="spinBtn" class="main-spin">SPIN REELS</button>
-      </div>
-
-      <div class="result" id="resultBox" style="margin-top: auto;">
-        <div class="result-text">
-          <div style="font-size:12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Current Prompt:</div>
-          <b id="lastResult">Ready to invent!</b>
-        </div>
-      </div>
+    <div class="header-text">
+      <h1>🧠 Creative Muse</h1>
+      <p>Pull the lever and spin the idea engine! 😈</p>
     </div>
 
     <div class="slot-container">
@@ -399,112 +355,172 @@
         <div class="reel-window" id="window4"><div class="reel-strip" id="strip4"></div></div>
         <div class="reel-window" id="window5"><div class="reel-strip" id="strip5"></div></div>
       </div>
+    </div>
 
-      <div class="edit-lab">
-        <div class="edit-lab-header">
-          <label>🛠️ Edit Category</label>
-          <div class="controls">
-            <select id="editCatSelect">
-              <option value="actions">Actions 🎬</option>
-              <option value="animals">Animals 🐺</option>
-              <option value="body">Body Features 👁️</option>
-              <option value="colors">Colors 🎨</option>
-              <option value="emotions">Emotions 🎭</option>
-              <option value="romance">Romance 💖</option>
-              <option value="styles">Styles 🖌️</option>
-              <option value="music">Music 🎧</option>
-              <option value="numbers">Numbers 🔢</option>
-              <option value="objects">Objects 🔮</option>
-              <option value="places">Places 🗺️</option>
-              <option value="roles">Roles 👑</option>
-              <option value="sizes">Sizes 📏</option>
-              <option value="spooky">Spooky 👻</option>
-              <option value="subjects">Subjects 🌌</option>
-              <option value="titles">Titles 📜</option>
-              <option value="custom1">Custom 1 📝</option>
-              <option value="custom2">Custom 2 📝</option>
-            </select>
-            <button id="saveCatBtn" class="ghost">Save ✅</button>
-          </div>
+    <div class="action-stack">
+      <button id="spinBtn" class="main-spin">SPIN REELS</button>
+      <div class="result" id="resultBox">
+        <div class="result-text">
+          <div style="font-size:12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Current Prompt:</div>
+          <b id="lastResult">Ready to invent!</b>
         </div>
-        <textarea id="editCatText" spellcheck="false" placeholder="One item per line..."></textarea>
       </div>
     </div>
 
-    <div class="card" style="height: 100%;">
-      <div class="field">
-        <label>Reel 3 Theme</label>
-        <select id="cat3">
-          <option value="actions">Actions 🎬</option>
-          <option value="animals">Animals 🐺</option>
-          <option value="body">Body Features 👁️</option>
-          <option value="colors">Colors 🎨</option>
-          <option value="emotions">Emotions 🎭</option>
-          <option value="romance">Romance & Passion 💖</option>
-          <option value="styles">Image Styles 🖌️</option>
-          <option value="music">Music Genres 🎧</option>
-          <option value="numbers">Numbers 🔢</option>
-          <option value="objects">Objects 🔮</option>
-          <option value="places" selected>Places 🗺️</option>
-          <option value="roles">Roles 👑</option>
-          <option value="sizes">Sizes 📏</option>
-          <option value="spooky">Spooky 👻</option>
-          <option value="subjects">Subjects 🌌</option>
-          <option value="titles">Titles 📜</option>
-          <option value="custom1">Custom 1 📝</option>
-          <option value="custom2">Custom 2 📝</option>
-        </select>
-      </div>
+    <div class="card">
+      <div class="categories-grid">
+        <div class="field">
+          <label>Reel 1</label>
+          <select id="cat1">
+            <option value="actions">Actions 🎬</option>
+            <option value="animals">Animals 🐺</option>
+            <option value="body">Body Features 👁️</option>
+            <option value="colors">Colors 🎨</option>
+            <option value="emotions">Emotions 🎭</option>
+            <option value="romance">Romance & Passion 💖</option>
+            <option value="styles" selected>Image Styles 🖌️</option>
+            <option value="music">Music Genres 🎧</option>
+            <option value="numbers">Numbers 🔢</option>
+            <option value="objects">Objects 🔮</option>
+            <option value="places">Places 🗺️</option>
+            <option value="roles">Roles 👑</option>
+            <option value="sizes">Sizes 📏</option>
+            <option value="spooky">Spooky 👻</option>
+            <option value="subjects">Subjects 🌌</option>
+            <option value="titles">Titles 📜</option>
+            <option value="custom1">Custom 1 📝</option>
+            <option value="custom2">Custom 2 📝</option>
+          </select>
+        </div>
 
-      <div class="field">
-        <label>Reel 4 Theme</label>
-        <select id="cat4">
-          <option value="actions" selected>Actions 🎬</option>
-          <option value="animals">Animals 🐺</option>
-          <option value="body">Body Features 👁️</option>
-          <option value="colors">Colors 🎨</option>
-          <option value="emotions">Emotions 🎭</option>
-          <option value="romance">Romance & Passion 💖</option>
-          <option value="styles">Image Styles 🖌️</option>
-          <option value="music">Music Genres 🎧</option>
-          <option value="numbers">Numbers 🔢</option>
-          <option value="objects">Objects 🔮</option>
-          <option value="places">Places 🗺️</option>
-          <option value="roles">Roles 👑</option>
-          <option value="sizes">Sizes 📏</option>
-          <option value="spooky">Spooky 👻</option>
-          <option value="subjects">Subjects 🌌</option>
-          <option value="titles">Titles 📜</option>
-          <option value="custom1">Custom 1 📝</option>
-          <option value="custom2">Custom 2 📝</option>
-        </select>
-      </div>
+        <div class="field">
+          <label>Reel 2</label>
+          <select id="cat2">
+            <option value="actions">Actions 🎬</option>
+            <option value="animals">Animals 🐺</option>
+            <option value="body">Body Features 👁️</option>
+            <option value="colors">Colors 🎨</option>
+            <option value="emotions">Emotions 🎭</option>
+            <option value="romance">Romance & Passion 💖</option>
+            <option value="styles">Image Styles 🖌️</option>
+            <option value="music">Music Genres 🎧</option>
+            <option value="numbers">Numbers 🔢</option>
+            <option value="objects">Objects 🔮</option>
+            <option value="places">Places 🗺️</option>
+            <option value="roles">Roles 👑</option>
+            <option value="sizes">Sizes 📏</option>
+            <option value="spooky">Spooky 👻</option>
+            <option value="subjects" selected>Subjects 🌌</option>
+            <option value="titles">Titles 📜</option>
+            <option value="custom1">Custom 1 📝</option>
+            <option value="custom2">Custom 2 📝</option>
+          </select>
+        </div>
 
-      <div class="field">
-        <label>Reel 5 Theme</label>
-        <select id="cat5">
-          <option value="actions">Actions 🎬</option>
-          <option value="animals">Animals 🐺</option>
-          <option value="body">Body Features 👁️</option>
-          <option value="colors">Colors 🎨</option>
-          <option value="emotions" selected>Emotions 🎭</option>
-          <option value="romance">Romance & Passion 💖</option>
-          <option value="styles">Image Styles 🖌️</option>
-          <option value="music">Music Genres 🎧</option>
-          <option value="numbers">Numbers 🔢</option>
-          <option value="objects">Objects 🔮</option>
-          <option value="places">Places 🗺️</option>
-          <option value="roles">Roles 👑</option>
-          <option value="sizes">Sizes 📏</option>
-          <option value="spooky">Spooky 👻</option>
-          <option value="subjects">Subjects 🌌</option>
-          <option value="titles">Titles 📜</option>
-          <option value="custom1">Custom 1 📝</option>
-          <option value="custom2">Custom 2 📝</option>
-        </select>
+        <div class="field">
+          <label>Reel 3</label>
+          <select id="cat3">
+            <option value="actions">Actions 🎬</option>
+            <option value="animals">Animals 🐺</option>
+            <option value="body">Body Features 👁️</option>
+            <option value="colors">Colors 🎨</option>
+            <option value="emotions">Emotions 🎭</option>
+            <option value="romance">Romance & Passion 💖</option>
+            <option value="styles">Image Styles 🖌️</option>
+            <option value="music">Music Genres 🎧</option>
+            <option value="numbers">Numbers 🔢</option>
+            <option value="objects">Objects 🔮</option>
+            <option value="places" selected>Places 🗺️</option>
+            <option value="roles">Roles 👑</option>
+            <option value="sizes">Sizes 📏</option>
+            <option value="spooky">Spooky 👻</option>
+            <option value="subjects">Subjects 🌌</option>
+            <option value="titles">Titles 📜</option>
+            <option value="custom1">Custom 1 📝</option>
+            <option value="custom2">Custom 2 📝</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Reel 4</label>
+          <select id="cat4">
+            <option value="actions" selected>Actions 🎬</option>
+            <option value="animals">Animals 🐺</option>
+            <option value="body">Body Features 👁️</option>
+            <option value="colors">Colors 🎨</option>
+            <option value="emotions">Emotions 🎭</option>
+            <option value="romance">Romance & Passion 💖</option>
+            <option value="styles">Image Styles 🖌️</option>
+            <option value="music">Music Genres 🎧</option>
+            <option value="numbers">Numbers 🔢</option>
+            <option value="objects">Objects 🔮</option>
+            <option value="places">Places 🗺️</option>
+            <option value="roles">Roles 👑</option>
+            <option value="sizes">Sizes 📏</option>
+            <option value="spooky">Spooky 👻</option>
+            <option value="subjects">Subjects 🌌</option>
+            <option value="titles">Titles 📜</option>
+            <option value="custom1">Custom 1 📝</option>
+            <option value="custom2">Custom 2 📝</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Reel 5</label>
+          <select id="cat5">
+            <option value="actions">Actions 🎬</option>
+            <option value="animals">Animals 🐺</option>
+            <option value="body">Body Features 👁️</option>
+            <option value="colors">Colors 🎨</option>
+            <option value="emotions" selected>Emotions 🎭</option>
+            <option value="romance">Romance & Passion 💖</option>
+            <option value="styles">Image Styles 🖌️</option>
+            <option value="music">Music Genres 🎧</option>
+            <option value="numbers">Numbers 🔢</option>
+            <option value="objects">Objects 🔮</option>
+            <option value="places">Places 🗺️</option>
+            <option value="roles">Roles 👑</option>
+            <option value="sizes">Sizes 📏</option>
+            <option value="spooky">Spooky 👻</option>
+            <option value="subjects">Subjects 🌌</option>
+            <option value="titles">Titles 📜</option>
+            <option value="custom1">Custom 1 📝</option>
+            <option value="custom2">Custom 2 📝</option>
+          </select>
+        </div>
       </div>
     </div>
-    
+
+    <div class="edit-lab">
+      <div class="edit-lab-header">
+        <label>🛠️ Category Editor</label>
+        <div class="controls">
+          <select id="editCatSelect">
+            <option value="actions">Actions 🎬</option>
+            <option value="animals">Animals 🐺</option>
+            <option value="body">Body Features 👁️</option>
+            <option value="colors">Colors 🎨</option>
+            <option value="emotions">Emotions 🎭</option>
+            <option value="romance">Romance 💖</option>
+            <option value="styles">Styles 🖌️</option>
+            <option value="music">Music 🎧</option>
+            <option value="numbers">Numbers 🔢</option>
+            <option value="objects">Objects 🔮</option>
+            <option value="places">Places 🗺️</option>
+            <option value="roles">Roles 👑</option>
+            <option value="sizes">Sizes 📏</option>
+            <option value="spooky">Spooky 👻</option>
+            <option value="subjects">Subjects 🌌</option>
+            <option value="titles">Titles 📜</option>
+            <option value="custom1">Custom 1 📝</option>
+            <option value="custom2">Custom 2 📝</option>
+          </select>
+          <button id="saveCatBtn" class="ghost">Save ✅</button>
+        </div>
+      </div>
+      <textarea id="editCatText" spellcheck="false" placeholder="One item per line..."></textarea>
+    </div>
+
   </div>
 
   <script>
@@ -521,9 +537,9 @@
       if(!audioCtx) return;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = 'triangle'; // Softer waveform
+      osc.type = 'triangle'; 
       osc.frequency.setValueAtTime(600 + (Math.random() > 0.5 ? 20 : 0), audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.005, audioCtx.currentTime); // Very quiet tick
+      gain.gain.setValueAtTime(0.005, audioCtx.currentTime); 
       gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.03);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
@@ -536,11 +552,11 @@
       const osc = audioCtx.createOscillator(); 
       const gain = audioCtx.createGain();
       
-      osc.type = 'sine'; // Smooth, deep thud
+      osc.type = 'sine'; 
       osc.frequency.setValueAtTime(100, audioCtx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.15);
 
-      gain.gain.setValueAtTime(0.15, audioCtx.currentTime); // Gentle volume
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime); 
       gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
       
       osc.connect(gain);
@@ -552,7 +568,6 @@
 
     function playWinChime() {
       if(!audioCtx) return;
-      // Soft, gentle 3-note ascending chord
       const notes = [523.25, 659.25, 783.99]; // C, E, G
       notes.forEach((freq, i) => {
         setTimeout(() => {
@@ -560,13 +575,13 @@
           const gain = audioCtx.createGain();
           osc.type = 'sine';
           osc.frequency.value = freq;
-          gain.gain.setValueAtTime(0.05, audioCtx.currentTime); // Very subtle volume
+          gain.gain.setValueAtTime(0.05, audioCtx.currentTime); 
           gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
           osc.connect(gain);
           gain.connect(audioCtx.destination);
           osc.start();
           osc.stop(audioCtx.currentTime + 0.6);
-        }, i * 150); // Slower, softer pacing
+        }, i * 150); 
       });
     }
 
