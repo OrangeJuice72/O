@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0b1020">
+  <link rel="apple-touch-icon" href="https://fonts.gstatic.com/s/e/notoemoji/latest/1f3b0/512.webp">
+  
+  <title>Mystery Slot</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#121a33;
+      --text:#eaf0ff;
+      --muted:#a9b6e6;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --accent: #ffd166;
+      --accent-glow: rgba(255, 209, 102, 0.4);
+      --item-height: 80px;
+    }
+    *{box-sizing:border-box}
+    
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      background: linear-gradient(-45deg, #0b1020, #1b1233, #0b1d22, #0d1630);
+      background-size: 400% 400%;
+      animation: gradientBG 18s ease infinite;
+      color:var(--text);
+      font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow-x: hidden;
+      padding: 20px 0;
+    }
+    
+    .wrap{
+      width: min(1300px, 96vw);
+      display: grid;
+      gap: 24px;
+      grid-template-columns: 280px 1fr 280px;
+      align-items: start;
+    }
+    
+    @media (max-width: 960px){ 
+      .wrap{ grid-template-columns: 1fr; gap: 30px; } 
+      .slot-container { order: -1; } 
+    }
+
+    .card{
+      background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius:24px;
+      padding:24px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.05);
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    h1{ font-size:26px; margin:0 0 4px; letter-spacing:.5px; line-height: 1.2; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+    p{ margin:0 0 12px; color:var(--muted); font-size: 14px; }
+    
+    .slot-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      gap: 20px;
+    }
+
+    .slot-machine {
+      display: flex;
+      gap: 8px;
+      background: linear-gradient(180deg, #1f253d, #080b14);
+      padding: 24px;
+      border-radius: 28px;
+      border: 3px solid rgba(255,209,102,0.3);
+      box-shadow: 
+        0 40px 100px rgba(0,0,0,0.9),
+        inset 0 10px 20px rgba(255,255,255,0.05),
+        inset 0 -10px 30px rgba(0,0,0,0.8),
+        0 0 30px rgba(255, 209, 102, 0.1);
+      position: relative;
+      transition: transform 0.1s;
+    }
+
+    @keyframes clunkShake {
+      0% { transform: translateY(0) scale(1); }
+      25% { transform: translateY(5px) scale(0.98); }
+      50% { transform: translateY(-3px) scale(1.01); }
+      75% { transform: translateY(2px) scale(0.99); }
+      100% { transform: translateY(0) scale(1); }
+    }
+    .shake { animation: clunkShake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+
+    .slot-machine::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: var(--item-height);
+      transform: translateY(-50%);
+      border-top: 2px solid var(--accent);
+      border-bottom: 2px solid var(--accent);
+      background: linear-gradient(90deg, rgba(255,209,102,0.0), rgba(255,209,102,0.15) 50%, rgba(255,209,102,0.0));
+      box-shadow: 0 0 20px var(--accent-glow);
+      pointer-events: none;
+      z-index: 10;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+
+    @keyframes jackpotFlash {
+      0%, 100% { box-shadow: 0 0 20px var(--accent-glow); background: linear-gradient(90deg, rgba(255,209,102,0.0), rgba(255,209,102,0.15) 50%, rgba(255,209,102,0.0)); }
+      50% { box-shadow: 0 0 60px rgba(255,209,102,1); background: linear-gradient(90deg, rgba(255,209,102,0.0), rgba(255,209,102,0.4) 50%, rgba(255,209,102,0.0)); }
+    }
+    .flash-payline::after { animation: jackpotFlash 0.6s ease-in-out 2; }
+
+    .reel-window {
+      width: 180px;
+      height: calc(var(--item-height) * 3);
+      background: #090c14;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 15px 30px rgba(0,0,0,0.9);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .reel-window::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 25%, rgba(0,0,0,0.5) 80%, rgba(0,0,0,0.9) 100%);
+      pointer-events: none;
+      z-index: 8;
+    }
+    .reel-window::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);
+      pointer-events: none;
+      z-index: 7;
+    }
+
+    .reel-strip { display: flex; flex-direction: column; width: 100%; }
+
+    .slot-item {
+      height: var(--item-height);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      font-weight: 800;
+      color: #fff;
+      text-align: center;
+      padding: 0 6px;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.9);
+      white-space: nowrap;
+      z-index: 2;
+    }
+
+    .spinning .reel-strip { filter: blur(2px); }
+    
+    .action-stack{ display:flex; flex-direction:column; gap:12px; }
+    
+    button{
+      border:0;
+      padding:14px 16px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:800;
+      color:#0b1020;
+      background: linear-gradient(180deg, #ffe08a, #ffba08);
+      box-shadow: 0 6px 0 #cc8b00, 0 15px 25px rgba(255,209,102,.3);
+      transition: transform .1s ease, box-shadow .1s ease, filter .2s;
+      font-size: 15px;
+      /* Stops zooming when tapping rapidly on iOS */
+      touch-action: manipulation; 
+    }
+    button:hover { filter: brightness(1.1); }
+    button:active{ transform: translateY(6px); box-shadow: 0 0px 0 #cc8b00, 0 5px 10px rgba(255,209,102,.3); }
+    button:disabled{ opacity:.55; cursor:not-allowed; transform: translateY(6px); box-shadow: 0 0px 0 #cc8b00; filter: grayscale(1); }
+    
+    .main-spin { font-size: 22px; padding: 20px; text-transform: uppercase; letter-spacing: 1.5px; }
+    
+    .ghost{
+      background: rgba(0,0,0,0.2);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.15);
+      box-shadow: 0 4px 0 rgba(0,0,0,0.4);
+    }
+    .ghost:hover { background: rgba(255,255,255,0.1); }
+    .ghost:active { transform: translateY(4px); box-shadow: 0 0px 0 rgba(0,0,0,0.4); }
+    
+    .field{
+      width:100%;
+      display:grid;
+      gap:8px;
+      padding:16px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.3);
+    }
+    .field label{
+      font-size:13px;
+      letter-spacing:.5px;
+      color:var(--muted);
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    
+    select, textarea{
+      border-radius:12px;
+      padding:12px 14px;
+      background: rgba(12, 16, 30, 0.8);
+      border:1px solid rgba(255,255,255,.2);
+      color:var(--text);
+      outline:none;
+      width: 100%;
+      font-weight: 600;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+    }
+    textarea{ min-height:90px; resize:vertical; font-family: inherit; }
+    textarea:focus{ border-color: var(--accent); }
+    
+    .result{
+      margin-top:auto;
+      padding:20px;
+      border-radius:16px;
+      border:1px solid rgba(138,92,255,.4);
+      background: rgba(138,92,255,.15);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      width: 100%;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 30px rgba(138,92,255,0.1);
+    }
+    .result.win-pop {
+      transform: scale(1.03);
+      border-color: var(--accent);
+      background: rgba(255, 209, 102, 0.15);
+      box-shadow: 0 0 30px rgba(255,209,102,0.3);
+    }
+
+    .result-text { display: flex; flex-direction: column; gap: 6px; }
+    .result b{ font-size:18px; color: #fff; line-height: 1.4; transition: color 0.3s; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    
+    .edit-lab {
+      width: 100%;
+      max-width: 585px; 
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .edit-lab-header { display: flex; justify-content: space-between; align-items: center; }
+    .edit-lab label { font-size: 14px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
+    .edit-lab .controls { display: flex; gap: 10px; }
+    .edit-lab select { padding: 8px 12px; font-size: 13px; width: auto; }
+    .edit-lab button { padding: 8px 16px; font-size: 14px; box-shadow: 0 4px 0 rgba(0,0,0,0.4); }
+    .edit-lab button:active { box-shadow: 0 0px 0 rgba(0,0,0,0.4); transform: translateY(4px); }
+
+    /* 📱 IPHONE/MOBILE RESPONSIVE OVERRIDES */
+    @media (max-width: 600px) {
+      :root {
+        --item-height: 60px; /* Shrinks the reels vertically */
+      }
+      body { padding: 10px; }
+      .wrap { gap: 16px; width: 100%; }
+      .card { padding: 16px; border-radius: 20px; }
+      .slot-machine { padding: 10px; gap: 4px; border-radius: 16px; }
+      
+      /* Scale the reels to fit 3 on a phone screen */
+      .reel-window { width: 30vw; border-radius: 8px; }
+      
+      /* Make text smaller and tighter to fit mobile reels */
+      .slot-item { font-size: 12px; letter-spacing: -0.5px; padding: 0 2px; }
+      
+      h1 { font-size: 22px; }
+      .main-spin { font-size: 18px; padding: 16px; }
+      .edit-lab { padding: 12px; border-radius: 16px; }
+      .edit-lab .controls { flex-direction: column; width: 50%; }
+      .edit-lab select { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    
+    <div class="card" style="height: 100%;">
+      <div>
+        <h1>🎰 Casino Chaos</h1>
+        <p>Pull the lever and pray to the RNG gods! 😈</p>
+      </div>
+
+      <div class="action-stack" style="margin-top: 10px;">
+        <button id="spinBtn" class="main-spin">SPIN REELS 🎰</button>
+      </div>
+
+      <div class="result" id="resultBox" style="margin-top: auto;">
+        <div class="result-text">
+          <div style="font-size:13px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Winning Combo:</div>
+          <b id="lastResult">Ready to spin!</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="slot-container">
+      <div class="slot-machine" id="machineObj">
+        <div class="reel-window" id="window1"><div class="reel-strip" id="strip1"></div></div>
+        <div class="reel-window" id="window2"><div class="reel-strip" id="strip2"></div></div>
+        <div class="reel-window" id="window3"><div class="reel-strip" id="strip3"></div></div>
+      </div>
+
+      <div class="edit-lab">
+        <div class="edit-lab-header">
+          <label>🛠️ Edit Category</label>
+          <div class="controls">
+            <select id="editCatSelect">
+              <option value="styles">Styles 🎨</option>
+              <option value="music">Music 🎧</option>
+              <option value="emotions">Emotions 🎭</option>
+              <option value="mystery">Mystery 👻</option>
+              <option value="subjects">Subjects 🎃</option>
+              <option value="roles">Roles 👑</option>
+              <option value="places">Places 🗺️</option>
+              <option value="objects">Objects 🔮</option>
+              <option value="creatures">Creatures 🐉</option>
+              <option value="custom1">Custom 1 📝</option>
+              <option value="custom2">Custom 2 📝</option>
+              <option value="custom3">Custom 3 📝</option>
+            </select>
+            <button id="saveCatBtn" class="ghost">Save ✅</button>
+          </div>
+        </div>
+        <textarea id="editCatText" spellcheck="false" placeholder="One item per line..."></textarea>
+      </div>
+    </div>
+
+    <div class="card" style="height: 100%;">
+      <div class="field">
+        <label>Reel 1 Theme</label>
+        <select id="cat1">
+          <option value="styles">Styles 🎨</option>
+          <option value="music">Music 🎧</option>
+          <option value="emotions">Emotions 🎭</option>
+          <option value="mystery">Mystery 👻</option>
+          <option value="subjects">Subjects 🎃</option>
+          <option value="roles">Roles 👑</option>
+          <option value="places" selected>Places 🗺️</option>
+          <option value="objects">Objects 🔮</option>
+          <option value="creatures">Creatures 🐉</option>
+          <option value="custom1">Custom 1 📝</option>
+          <option value="custom2">Custom 2 📝</option>
+          <option value="custom3">Custom 3 📝</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Reel 2 Theme</label>
+        <select id="cat2">
+          <option value="styles">Styles 🎨</option>
+          <option value="music">Music 🎧</option>
+          <option value="emotions">Emotions 🎭</option>
+          <option value="mystery">Mystery 👻</option>
+          <option value="subjects">Subjects 🎃</option>
+          <option value="roles">Roles 👑</option>
+          <option value="places">Places 🗺️</option>
+          <option value="objects" selected>Objects 🔮</option>
+          <option value="creatures">Creatures 🐉</option>
+          <option value="custom1">Custom 1 📝</option>
+          <option value="custom2">Custom 2 📝</option>
+          <option value="custom3">Custom 3 📝</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Reel 3 Theme</label>
+        <select id="cat3">
+          <option value="styles">Styles 🎨</option>
+          <option value="music">Music 🎧</option>
+          <option value="emotions">Emotions 🎭</option>
+          <option value="mystery">Mystery 👻</option>
+          <option value="subjects">Subjects 🎃</option>
+          <option value="roles">Roles 👑</option>
+          <option value="places">Places 🗺️</option>
+          <option value="objects">Objects 🔮</option>
+          <option value="creatures" selected>Creatures 🐉</option>
+          <option value="custom1">Custom 1 📝</option>
+          <option value="custom2">Custom 2 📝</option>
+          <option value="custom3">Custom 3 📝</option>
+        </select>
+      </div>
+    </div>
+    
+  </div>
+
+  <script>
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioContext();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playTick() {
+      if(!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(400 + Math.random() * 200, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.02, audioCtx.currentTime); 
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.05);
+    }
+
+    function playClunk() {
+      if(!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.4, audioCtx.currentTime); 
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.15);
+    }
+
+    function playWinChime() {
+      if(!audioCtx) return;
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, i) => {
+        setTimeout(() => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 1);
+        }, i * 100);
+      });
+    }
+
+    let tickerInterval = null;
+
+    const categoryData = {
+      styles: ["Cyberpunk", "Watercolor", "Photorealistic", "Pen & Ink", "Pop Art", "Pixel Art", "Synthwave", "3D Render", "Crayon Doodle", "90s Anime", "Geometric", "Oil Painting", "Charcoal", "Psychedelic", "Paper Cutout", "Glitch Art"],
+      music: ["Classic Rock", "Smooth Jazz", "70s Disco", "Pop Country", "Dubstep", "90s Hip Hop", "Orchestral", "Bubble Pop", "Heavy Metal", "Lo-Fi Chill", "R&B Soul", "Reggae", "Emo/Punk", "Synthpop", "K-Pop", "Indie Rock"],
+      emotions: ["Laughter", "Melancholy", "Fury", "Puppy Eyes", "Mind-Blown", "Cool", "Dread", "Romantic", "Sass", "Bored", "Celebratory", "Confused", "Cringing", "Secretive", "Starstruck", "Disgusted"],
+      mystery: ["Haunted hint", "Hidden key", "Suspect: YOU", "Forbidden note", "Strange potion", "Cursed charm", "Cryptic puzzle", "Secret passage", "Watcher appears", "Double agent", "An unseen eye", "Mirror portal", "Swarm of bats", "Web trap", "Rattling bones", "Time loops"],
+      subjects: ["Pumpkin", "Vampire", "Alien", "Robot", "Dragon", "Cat", "Wizard", "Zombie", "Ghost", "Knight", "Pirate", "Ninja", "Mermaid", "Goblin", "Detective", "Fairy"],
+      roles: ["King", "Queen", "Hero", "Villain", "Sidekick", "Wanderer", "God", "Peasant", "Assassin", "Scholar", "Fool", "Merchant", "Oracle", "Captain", "Thief", "Bounty Hunter"],
+      places: ["Cyberpunk City", "Enchanted Forest", "Abandoned Mall", "Space Station", "Haunted Mansion", "Neon Diner", "Volcano Lair", "Underwater Ruins", "Floating Island", "Desert Oasis", "Ice Cave", "Gothic Castle", "Tokyo Streets", "Mars Colony", "Hidden Valley", "Crystal Cavern"],
+      objects: ["Glowing Orb", "Cursed Sword", "Magic Wand", "Time Machine", "Laser Gun", "Crystal Skull", "Hoverboard", "Ancient Scroll", "Boombox", "Poison Vial", "Crown Jewels", "Pocket Watch", "Spell Book", "Golden Compass", "Voodoo Doll", "Lava Lamp"],
+      creatures: ["Dragon", "Unicorn", "Kraken", "Cyborg", "Werewolf", "Vampire", "Mutant", "Gremlin", "Yeti", "Phoenix", "Gargoyle", "Manticore", "Banshee", "Chupacabra", "Slime Monster", "Mecha-Godzilla"],
+      custom1: ["Type your", "own fun", "ideas here!"],
+      custom2: ["Option A", "Option B", "Option C"],
+      custom3: ["Item X", "Item Y", "Item Z"]
+    };
+
+    const spinBtn = document.getElementById("spinBtn");
+    const lastResultEl = document.getElementById("lastResult");
+    const resultBox = document.getElementById("resultBox");
+    const machineObj = document.getElementById("machineObj");
+
+    class SlotReel {
+      constructor(windowId, stripId) {
+        this.windowEl = document.getElementById(windowId);
+        this.stripEl = document.getElementById(stripId);
+        this.currentCategory = [];
+        this.currentWinner = "?";
+        this.spinning = false;
+      }
+
+      loadCategory(catKey) {
+        this.currentCategory = categoryData[catKey] || categoryData["mystery"];
+        this.currentWinner = this.currentCategory[Math.floor(Math.random() * this.currentCategory.length)];
+        this.renderStatic();
+      }
+
+      renderStatic() {
+        this.stripEl.style.transition = "none";
+        this.stripEl.style.transform = `translateY(0px)`;
+        const prev = this.getRandomItem();
+        const next = this.getRandomItem();
+        this.stripEl.innerHTML = `
+          <div class="slot-item" style="color: #64748b">${prev}</div>
+          <div class="slot-item" style="color: #fff">${this.currentWinner}</div>
+          <div class="slot-item" style="color: #64748b">${next}</div>
+        `;
+      }
+
+      getRandomItem() { return this.currentCategory[Math.floor(Math.random() * this.currentCategory.length)]; }
+
+      spin(duration, onComplete) {
+        if(this.spinning) return;
+        this.spinning = true;
+        this.windowEl.classList.add("spinning");
+
+        const numSpins = Math.floor(duration / 100); 
+        const newWinner = this.getRandomItem();
+        
+        // Grab dynamic item height for mobile accuracy
+        const computedHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--item-height'));
+        
+        let html = `
+          <div class="slot-item" style="color: #64748b">${this.getRandomItem()}</div>
+          <div class="slot-item" style="color: #fff">${this.currentWinner}</div>
+        `;
+        
+        const hueShift = Math.floor(Math.random() * 360);
+        for(let i=0; i<numSpins; i++) {
+          const color = `hsl(${(hueShift + i*10) % 360}, 80%, 70%)`;
+          html += `<div class="slot-item" style="color: ${color}">${this.getRandomItem()}</div>`;
+        }
+        
+        html += `
+          <div class="slot-item" style="color: #ffd166">${newWinner}</div>
+          <div class="slot-item" style="color: #64748b">${this.getRandomItem()}</div>
+        `;
+
+        this.stripEl.style.transition = "none";
+        this.stripEl.style.transform = `translateY(0px)`;
+        this.stripEl.innerHTML = html;
+
+        void this.stripEl.offsetHeight; 
+
+        this.stripEl.style.transition = `transform ${duration}ms cubic-bezier(0.15, 0.85, 0.2, 1)`;
+        const targetOffset = (numSpins + 1) * computedHeight;
+        this.stripEl.style.transform = `translateY(-${targetOffset}px)`;
+
+        setTimeout(() => {
+          this.spinning = false;
+          this.currentWinner = newWinner;
+          this.windowEl.classList.remove("spinning");
+          this.renderStatic(); 
+          
+          playClunk();
+          machineObj.classList.remove("shake");
+          void machineObj.offsetWidth; 
+          machineObj.classList.add("shake");
+          
+          if (onComplete) onComplete();
+        }, duration);
+      }
+    }
+
+    const r1 = new SlotReel("window1", "strip1");
+    const r2 = new SlotReel("window2", "strip2");
+    const r3 = new SlotReel("window3", "strip3");
+
+    const cat1 = document.getElementById("cat1");
+    const cat2 = document.getElementById("cat2");
+    const cat3 = document.getElementById("cat3");
+
+    r1.loadCategory(cat1.value);
+    r2.loadCategory(cat2.value);
+    r3.loadCategory(cat3.value);
+
+    cat1.addEventListener("change", () => r1.loadCategory(cat1.value));
+    cat2.addEventListener("change", () => r2.loadCategory(cat2.value));
+    cat3.addEventListener("change", () => r3.loadCategory(cat3.value));
+
+    const editCatSelect = document.getElementById("editCatSelect");
+    const editCatText = document.getElementById("editCatText");
+    const saveCatBtn = document.getElementById("saveCatBtn");
+
+    function loadEditArea() { editCatText.value = categoryData[editCatSelect.value].join("\n"); }
+    editCatSelect.addEventListener("change", loadEditArea);
+    loadEditArea(); 
+
+    saveCatBtn.addEventListener("click", () => {
+      const selectedCat = editCatSelect.value;
+      const newItems = editCatText.value.split("\n").map(s => s.trim()).filter(Boolean);
+      if (newItems.length === 0) newItems.push("Empty! 🤷");
+      
+      categoryData[selectedCat] = newItems;
+      if (cat1.value === selectedCat) r1.loadCategory(selectedCat);
+      if (cat2.value === selectedCat) r2.loadCategory(selectedCat);
+      if (cat3.value === selectedCat) r3.loadCategory(selectedCat);
+      
+      const originalText = saveCatBtn.textContent;
+      saveCatBtn.textContent = "Saved! 🎉";
+      saveCatBtn.style.color = "#ffd166";
+      setTimeout(() => { saveCatBtn.textContent = originalText; saveCatBtn.style.color = ""; }, 1500);
+    });
+
+    function updateResultText() {
+      lastResultEl.innerHTML = `
+        <span style="color:${r1.spinning ? 'var(--muted)' : '#ffd166'}">${r1.currentWinner}</span>, 
+        <span style="color:${r2.spinning ? 'var(--muted)' : '#ffd166'}">${r2.currentWinner}</span>, 
+        <span style="color:${r3.spinning ? 'var(--muted)' : '#ffd166'}">${r3.currentWinner}</span>
+      `;
+    }
+    updateResultText();
+
+    function spinAll() {
+      if(r1.spinning || r2.spinning || r3.spinning) return;
+      
+      initAudio(); 
+      
+      spinBtn.disabled = true;
+      resultBox.classList.remove("win-pop");
+      machineObj.classList.remove("flash-payline");
+      
+      r1.currentWinner = "•••"; r2.currentWinner = "•••"; r3.currentWinner = "•••";
+      updateResultText();
+
+      if(tickerInterval) clearInterval(tickerInterval);
+      tickerInterval = setInterval(playTick, 80);
+
+      r1.spin(3500, () => { updateResultText(); });
+      r2.spin(5000, () => { updateResultText(); });
+      r3.spin(6500, () => { 
+        updateResultText(); 
+        spinBtn.disabled = false; 
+        
+        clearInterval(tickerInterval);
+        playWinChime();
+        resultBox.classList.add("win-pop");
+        machineObj.classList.add("flash-payline");
+      });
+    }
+
+    spinBtn.addEventListener("click", spinAll);
+
+  </script>
+</body>
+</html>
