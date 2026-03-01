@@ -22,6 +22,12 @@
       --item-height: 80px;
     }
     *{box-sizing:border-box}
+
+    /* KILLS THE IOS WHITE BOUNCE VOID */
+    html {
+      background-color: #0b1020; 
+      overscroll-behavior: none; 
+    }
     
     @keyframes gradientBG {
       0% { background-position: 0% 50%; }
@@ -32,6 +38,7 @@
     body{
       margin:0;
       min-height:100vh;
+      overscroll-behavior: none; /* Stops the bounce on the body too */
       display:grid;
       place-items:center;
       background: linear-gradient(-45deg, #0b1020, #1b1233, #0b1d22, #0d1630);
@@ -189,7 +196,6 @@
       box-shadow: 0 6px 0 #cc8b00, 0 15px 25px rgba(255,209,102,.3);
       transition: transform .1s ease, box-shadow .1s ease, filter .2s;
       font-size: 15px;
-      /* Stops zooming when tapping rapidly on iOS */
       touch-action: manipulation; 
     }
     button:hover { filter: brightness(1.1); }
@@ -285,20 +291,17 @@
     .edit-lab button { padding: 8px 16px; font-size: 14px; box-shadow: 0 4px 0 rgba(0,0,0,0.4); }
     .edit-lab button:active { box-shadow: 0 0px 0 rgba(0,0,0,0.4); transform: translateY(4px); }
 
-    /* 📱 IPHONE/MOBILE RESPONSIVE OVERRIDES */
+    /* 📱 IPHONE RESPONSIVE STYLES */
     @media (max-width: 600px) {
       :root {
-        --item-height: 60px; /* Shrinks the reels vertically */
+        --item-height: 60px; 
       }
       body { padding: 10px; }
       .wrap { gap: 16px; width: 100%; }
       .card { padding: 16px; border-radius: 20px; }
       .slot-machine { padding: 10px; gap: 4px; border-radius: 16px; }
       
-      /* Scale the reels to fit 3 on a phone screen */
       .reel-window { width: 30vw; border-radius: 8px; }
-      
-      /* Make text smaller and tighter to fit mobile reels */
       .slot-item { font-size: 12px; letter-spacing: -0.5px; padding: 0 2px; }
       
       h1 { font-size: 22px; }
@@ -536,7 +539,6 @@
         const numSpins = Math.floor(duration / 100); 
         const newWinner = this.getRandomItem();
         
-        // Grab dynamic item height for mobile accuracy
         const computedHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--item-height'));
         
         let html = `
