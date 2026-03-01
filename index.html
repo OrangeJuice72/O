@@ -172,7 +172,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 21px; /* Bigger, bolder font */
+      font-size: 21px; 
       font-weight: 900;
       font-family: 'Impact', 'Arial Black', sans-serif;
       text-transform: uppercase;
@@ -185,15 +185,13 @@
       z-index: 2;
     }
 
-    /* Motion blur */
     .spinning .reel-strip { filter: blur(2.5px); }
     
     .action-stack{ display:flex; flex-direction:column; gap:12px; }
     
-    /* NEW ARCADE SPIN BUTTON */
     button.main-spin {
       border: 0;
-      border-radius: 100px; /* Pill shape */
+      border-radius: 100px;
       cursor: pointer;
       font-weight: 900;
       color: #fff;
@@ -309,18 +307,9 @@
     .edit-lab select { padding: 8px 12px; font-size: 13px; width: auto; }
     .edit-lab button { padding: 8px 16px; font-size: 14px; }
 
-    /* CONFETTI CANVAS */
-    #confettiCanvas {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: 9999;
-    }
-
     /* 📱 MOBILE TWEAKS */
     @media (max-width: 600px) {
-      :root { var(--item-height): 60px; }
+      :root { --item-height: 60px; }
       body { padding: 10px; }
       .wrap { gap: 16px; width: 100%; }
       .card { padding: 16px; border-radius: 20px; }
@@ -336,8 +325,6 @@
   </style>
 </head>
 <body>
-  <canvas id="confettiCanvas"></canvas>
-
   <div class="wrap">
     
     <div class="card" style="height: 100%;">
@@ -449,138 +436,6 @@
   </div>
 
   <script>
-    // --- CONFETTI SYSTEM ---
-    const canvas = document.getElementById('confettiCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    let particles = [];
-    let confettiActive = false;
-
-    class ConfettiParticle {
-      constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height - canvas.height;
-        this.w = Math.random() * 10 + 5;
-        this.h = Math.random() * 10 + 5;
-        this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
-        this.speedY = Math.random() * 3 + 2;
-        this.speedX = Math.random() * 2 - 1;
-        this.rot = Math.random() * 360;
-        this.rotSpeed = Math.random() * 5 - 2.5;
-      }
-      update() {
-        this.y += this.speedY;
-        this.x += this.speedX;
-        this.rot += this.rotSpeed;
-        if (this.y > canvas.height) {
-          this.y = -10;
-          this.x = Math.random() * canvas.width;
-        }
-      }
-      draw() {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rot * Math.PI / 180);
-        ctx.fillStyle = this.color;
-        ctx.fillRect(-this.w/2, -this.h/2, this.w, this.h);
-        ctx.restore();
-      }
-    }
-
-    function startConfetti() {
-      particles = [];
-      for(let i=0; i<150; i++) particles.push(new ConfettiParticle());
-      confettiActive = true;
-      setTimeout(() => confettiActive = false, 3000); // Stop generating after 3s
-      requestAnimationFrame(animateConfetti);
-    }
-
-    function animateConfetti() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => { p.update(); p.draw(); });
-      // Keep animating if active, or if particles are still on screen
-      if (confettiActive || particles.some(p => p.y < canvas.height)) {
-        requestAnimationFrame(animateConfetti);
-      } else {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-    }
-    
-    window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
-
-    // --- SYNTHESIZED SOUND EFFECTS PRO ---
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    let audioCtx;
-
-    function initAudio() {
-      if (!audioCtx) audioCtx = new AudioContext();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-    }
-
-    function playTick() {
-      if(!audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'square'; // harsher metallic tick
-      // Alternate pitches slightly to sound like teeth on a gear
-      osc.frequency.setValueAtTime(600 + (Math.random() > 0.5 ? 50 : 0), audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.015, audioCtx.currentTime); 
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.03);
-    }
-
-    function playClunk() {
-      if(!audioCtx) return;
-      // Dual oscillator for a heavy, mechanical vault lock
-      const osc1 = audioCtx.createOscillator(); // Deep Bass Thud
-      const osc2 = audioCtx.createOscillator(); // Metallic Clack
-      const gain = audioCtx.createGain();
-      
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(120, audioCtx.currentTime);
-      osc1.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.2);
-      
-      osc2.type = 'sawtooth';
-      osc2.frequency.setValueAtTime(300, audioCtx.currentTime);
-      osc2.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
-
-      gain.gain.setValueAtTime(0.5, audioCtx.currentTime); 
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-      
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(audioCtx.destination);
-      
-      osc1.start(); osc2.start();
-      osc1.stop(audioCtx.currentTime + 0.2); osc2.stop(audioCtx.currentTime + 0.2);
-    }
-
-    function playWinChime() {
-      if(!audioCtx) return;
-      // Fast, Vegas-style coin cascade (C major pentatonic run)
-      const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98, 2093.00];
-      notes.forEach((freq, i) => {
-        setTimeout(() => {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sine';
-          osc.frequency.value = freq;
-          gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start();
-          osc.stop(audioCtx.currentTime + 0.8);
-        }, i * 60); // Super fast 60ms delay between notes
-      });
-    }
-
-    let tickerInterval = null;
-
     const categoryData = {
       styles: ["Cyberpunk", "Watercolor", "Photorealistic", "Pen & Ink", "Pop Art", "Pixel Art", "Synthwave", "3D Render", "Crayon Doodle", "90s Anime", "Geometric", "Oil Painting", "Charcoal", "Psychedelic", "Paper Cutout", "Glitch Art"],
       music: ["Classic Rock", "Smooth Jazz", "70s Disco", "Pop Country", "Dubstep", "90s Hip Hop", "Orchestral", "Bubble Pop", "Heavy Metal", "Lo-Fi Chill", "R&B Soul", "Reggae", "Emo/Punk", "Synthpop", "K-Pop", "Indie Rock"],
@@ -672,7 +527,6 @@
           this.windowEl.classList.remove("spinning");
           this.renderStatic(); 
           
-          playClunk();
           machineObj.classList.remove("shake");
           void machineObj.offsetWidth; 
           machineObj.classList.add("shake");
@@ -734,8 +588,6 @@
     function spinAll() {
       if(r1.spinning || r2.spinning || r3.spinning) return;
       
-      initAudio(); 
-      
       spinBtn.disabled = true;
       resultBox.classList.remove("win-pop");
       machineObj.classList.remove("flash-payline");
@@ -743,18 +595,12 @@
       r1.currentWinner = "•••"; r2.currentWinner = "•••"; r3.currentWinner = "•••";
       updateResultText();
 
-      if(tickerInterval) clearInterval(tickerInterval);
-      tickerInterval = setInterval(playTick, 80); // Fast mechanical tick
-
       r1.spin(3500, () => { updateResultText(); });
       r2.spin(5000, () => { updateResultText(); });
       r3.spin(6500, () => { 
         updateResultText(); 
         spinBtn.disabled = false; 
         
-        clearInterval(tickerInterval);
-        playWinChime();
-        startConfetti(); // Trigger the confetti cannon!
         resultBox.classList.add("win-pop");
         machineObj.classList.add("flash-payline");
       });
