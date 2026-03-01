@@ -34,7 +34,6 @@
       display:flex;
       flex-direction: column;
       align-items: center;
-      /* ECO MODE: Static deep background instead of an animation */
       background: #070b14;
       background-image: radial-gradient(circle at 50% 0%, #1b1233, #070b14 80%);
       color:var(--text);
@@ -174,9 +173,6 @@
       z-index: 2;
     }
 
-    /* ECO MODE: Removed the blur filter for extreme battery saving! */
-    /* .spinning .reel-strip { filter: blur(2px); } */
-    
     /* SPIN & RESULT LAYOUT */
     .action-stack {
       display: flex;
@@ -582,8 +578,8 @@
 
     let tickerInterval = null;
 
-    // --- MASSIVE IDEA DICTIONARIES ---
-    const categoryData = {
+    // --- DEFAULT MASSIVE IDEA DICTIONARIES ---
+    let categoryData = {
       actions: ["Running", "Jumping", "Whispering", "Screaming", "Flying", "Falling", "Dancing", "Fighting", "Weeping", "Laughing", "Hiding", "Seeking", "Hunting", "Sleeping", "Praying", "Meditating", "Building", "Destroying", "Swimming", "Climbing", "Crawling", "Teleporting", "Casting", "Summoning", "Betraying", "Kissing", "Embracing", "Punching", "Kicking", "Dodging", "Blocking", "Stealing", "Giving", "Singing", "Reading", "Writing", "Painting", "Sculpting", "Crafting", "Cooking", "Eating", "Drinking", "Scheming", "Plotting", "Escaping", "Rescuing", "Exploring", "Discovering", "Inventing"],
       animals: ["Wolf", "Fox", "Bear", "Lion", "Tiger", "Panther", "Eagle", "Hawk", "Owl", "Raven", "Crow", "Snake", "Lizard", "Crocodile", "Shark", "Dolphin", "Whale", "Octopus", "Squid", "Crab", "Spider", "Scorpion", "Bee", "Butterfly", "Moth", "Stag", "Deer", "Horse", "Unicorn", "Pegasi", "Elephant", "Rhino", "Hippo", "Giraffe", "Monkey", "Ape", "Gorilla", "Chimpanzee", "Sloth", "Koala", "Kangaroo", "Penguin", "Seal", "Walrus", "Polar Bear", "Moose", "Camel", "Alpaca", "Llama", "Dragon"],
       body: ["Head", "Brain", "Eye", "Ear", "Nose", "Mouth", "Lip", "Tooth", "Tongue", "Jaw", "Chin", "Cheek", "Forehead", "Neck", "Throat", "Shoulder", "Arm", "Elbow", "Forearm", "Wrist", "Hand", "Palm", "Finger", "Thumb", "Knuckle", "Nail", "Chest", "Rib", "Heart", "Lung", "Stomach", "Liver", "Kidney", "Spine", "Back", "Waist", "Hip", "Pelvis", "Leg", "Thigh", "Knee", "Calf", "Ankle", "Foot", "Heel", "Toe", "Skin", "Muscle", "Bone", "Vein", "Artery"],
@@ -603,6 +599,21 @@
       custom1: ["Type your", "own fun", "ideas here!"],
       custom2: ["Option A", "Option B", "Option C"]
     };
+
+    // --- LOCAL STORAGE MAGIC ---
+    // Check if the user has saved custom lists on their device before
+    const savedData = localStorage.getItem("museCustomLists");
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        // We merge the saved data OVER the default data. 
+        // This ensures if we add new default categories later, it doesn't break, 
+        // but their custom edits take priority!
+        categoryData = { ...categoryData, ...parsedData };
+      } catch(e) {
+        console.error("Could not load saved lists!", e);
+      }
+    }
 
     const spinBtn = document.getElementById("spinBtn");
     const lastResultEl = document.getElementById("lastResult");
@@ -728,15 +739,21 @@
       const newItems = editCatText.value.split("\n").map(s => s.trim()).filter(Boolean);
       if (newItems.length === 0) newItems.push("Empty! 🤷");
       
+      // 1. Update the master array
       categoryData[selectedCat] = newItems;
+      
+      // 2. Refresh any reels currently using this category
       if (cat1.value === selectedCat) r1.loadCategory(selectedCat);
       if (cat2.value === selectedCat) r2.loadCategory(selectedCat);
       if (cat3.value === selectedCat) r3.loadCategory(selectedCat);
       if (cat4.value === selectedCat) r4.loadCategory(selectedCat);
       if (cat5.value === selectedCat) r5.loadCategory(selectedCat);
       
+      // 3. SECURELY SAVE TO THE USER'S DEVICE
+      localStorage.setItem("museCustomLists", JSON.stringify(categoryData));
+      
       const originalText = saveCatBtn.textContent;
-      saveCatBtn.textContent = "Saved! 🎉";
+      saveCatBtn.textContent = "Saved to Phone! 💾";
       saveCatBtn.style.color = "#ffd166";
       setTimeout(() => { saveCatBtn.textContent = originalText; saveCatBtn.style.color = ""; }, 1500);
     });
