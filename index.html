@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0b1020">
   <link rel="apple-touch-icon" href="https://fonts.gstatic.com/s/e/notoemoji/latest/1f3b0/512.webp">
   
-  <title>Mystery Slot</title>
+  <title>Mystery Slot VIP</title>
   <style>
     :root{
       --bg:#0b1020;
@@ -18,12 +17,11 @@
       --muted:#a9b6e6;
       --shadow: 0 18px 60px rgba(0,0,0,.45);
       --accent: #ffd166;
-      --accent-glow: rgba(255, 209, 102, 0.4);
+      --accent-glow: rgba(255, 209, 102, 0.5);
       --item-height: 80px;
     }
     *{box-sizing:border-box}
 
-    /* KILLS THE IOS WHITE BOUNCE VOID */
     html {
       background-color: #0b1020; 
       overscroll-behavior: none; 
@@ -38,12 +36,12 @@
     body{
       margin:0;
       min-height:100vh;
-      overscroll-behavior: none; /* Stops the bounce on the body too */
+      overscroll-behavior: none;
       display:grid;
       place-items:center;
-      background: linear-gradient(-45deg, #0b1020, #1b1233, #0b1d22, #0d1630);
+      background: linear-gradient(-45deg, #070b14, #1b1233, #081519, #0a1126);
       background-size: 400% 400%;
-      animation: gradientBG 18s ease infinite;
+      animation: gradientBG 20s ease infinite;
       color:var(--text);
       font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       overflow-x: hidden;
@@ -56,6 +54,8 @@
       gap: 24px;
       grid-template-columns: 280px 1fr 280px;
       align-items: start;
+      position: relative;
+      z-index: 10;
     }
     
     @media (max-width: 960px){ 
@@ -75,9 +75,10 @@
       gap: 16px;
     }
     
-    h1{ font-size:26px; margin:0 0 4px; letter-spacing:.5px; line-height: 1.2; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+    h1{ font-size:26px; margin:0 0 4px; letter-spacing:.5px; line-height: 1.2; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
     p{ margin:0 0 12px; color:var(--muted); font-size: 14px; }
     
+    /* SLOT MACHINE STYLES */
     .slot-container {
       display: flex;
       flex-direction: column;
@@ -90,27 +91,27 @@
     .slot-machine {
       display: flex;
       gap: 8px;
-      background: linear-gradient(180deg, #1f253d, #080b14);
+      background: linear-gradient(180deg, #2a324a, #080b14);
       padding: 24px;
       border-radius: 28px;
-      border: 3px solid rgba(255,209,102,0.3);
+      border: 3px solid rgba(255,209,102,0.4);
       box-shadow: 
-        0 40px 100px rgba(0,0,0,0.9),
-        inset 0 10px 20px rgba(255,255,255,0.05),
-        inset 0 -10px 30px rgba(0,0,0,0.8),
-        0 0 30px rgba(255, 209, 102, 0.1);
+        0 50px 100px rgba(0,0,0,0.9),
+        inset 0 10px 20px rgba(255,255,255,0.1),
+        inset 0 -10px 30px rgba(0,0,0,0.9),
+        0 0 40px rgba(255, 209, 102, 0.15);
       position: relative;
       transition: transform 0.1s;
     }
 
     @keyframes clunkShake {
       0% { transform: translateY(0) scale(1); }
-      25% { transform: translateY(5px) scale(0.98); }
-      50% { transform: translateY(-3px) scale(1.01); }
+      25% { transform: translateY(6px) scale(0.98); }
+      50% { transform: translateY(-4px) scale(1.01); }
       75% { transform: translateY(2px) scale(0.99); }
       100% { transform: translateY(0) scale(1); }
     }
-    .shake { animation: clunkShake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+    .shake { animation: clunkShake 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
 
     .slot-machine::after {
       content: "";
@@ -120,10 +121,10 @@
       right: 0;
       height: var(--item-height);
       transform: translateY(-50%);
-      border-top: 2px solid var(--accent);
-      border-bottom: 2px solid var(--accent);
-      background: linear-gradient(90deg, rgba(255,209,102,0.0), rgba(255,209,102,0.15) 50%, rgba(255,209,102,0.0));
-      box-shadow: 0 0 20px var(--accent-glow);
+      border-top: 3px solid var(--accent);
+      border-bottom: 3px solid var(--accent);
+      background: linear-gradient(90deg, rgba(255,209,102,0.0), rgba(255,209,102,0.2) 50%, rgba(255,209,102,0.0));
+      box-shadow: 0 0 25px var(--accent-glow);
       pointer-events: none;
       z-index: 10;
       border-radius: 6px;
@@ -131,27 +132,27 @@
     }
 
     @keyframes jackpotFlash {
-      0%, 100% { box-shadow: 0 0 20px var(--accent-glow); background: linear-gradient(90deg, rgba(255,209,102,0.0), rgba(255,209,102,0.15) 50%, rgba(255,209,102,0.0)); }
-      50% { box-shadow: 0 0 60px rgba(255,209,102,1); background: linear-gradient(90deg, rgba(255,209,102,0.0), rgba(255,209,102,0.4) 50%, rgba(255,209,102,0.0)); }
+      0%, 100% { box-shadow: 0 0 25px var(--accent-glow); background: linear-gradient(90deg, rgba(255,209,102,0.0), rgba(255,209,102,0.2) 50%, rgba(255,209,102,0.0)); }
+      50% { box-shadow: 0 0 80px rgba(255,209,102,1); background: linear-gradient(90deg, rgba(255,209,102,0.0), rgba(255,209,102,0.5) 50%, rgba(255,209,102,0.0)); }
     }
-    .flash-payline::after { animation: jackpotFlash 0.6s ease-in-out 2; }
+    .flash-payline::after { animation: jackpotFlash 0.5s ease-in-out 3; }
 
     .reel-window {
       width: 180px;
       height: calc(var(--item-height) * 3);
-      background: #090c14;
+      background: #04060a;
       border-radius: 12px;
       overflow: hidden;
       position: relative;
-      box-shadow: inset 0 15px 30px rgba(0,0,0,0.9);
-      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: inset 0 20px 40px rgba(0,0,0,1);
+      border: 1px solid rgba(255,255,255,0.08);
     }
 
     .reel-window::after {
       content: "";
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 25%, rgba(0,0,0,0.5) 80%, rgba(0,0,0,0.9) 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 20%, rgba(0,0,0,0.6) 80%, rgba(0,0,0,0.95) 100%);
       pointer-events: none;
       z-index: 8;
     }
@@ -159,7 +160,7 @@
       content: "";
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 4px);
       pointer-events: none;
       z-index: 7;
     }
@@ -171,47 +172,65 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 19px;
-      font-weight: 800;
+      font-size: 21px; /* Bigger, bolder font */
+      font-weight: 900;
+      font-family: 'Impact', 'Arial Black', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       color: #fff;
       text-align: center;
       padding: 0 6px;
-      text-shadow: 0 3px 6px rgba(0,0,0,0.9);
+      text-shadow: 0 4px 8px rgba(0,0,0,1);
       white-space: nowrap;
       z-index: 2;
     }
 
-    .spinning .reel-strip { filter: blur(2px); }
+    /* Motion blur */
+    .spinning .reel-strip { filter: blur(2.5px); }
     
     .action-stack{ display:flex; flex-direction:column; gap:12px; }
     
-    button{
-      border:0;
-      padding:14px 16px;
-      border-radius:14px;
-      cursor:pointer;
-      font-weight:800;
-      color:#0b1020;
-      background: linear-gradient(180deg, #ffe08a, #ffba08);
-      box-shadow: 0 6px 0 #cc8b00, 0 15px 25px rgba(255,209,102,.3);
+    /* NEW ARCADE SPIN BUTTON */
+    button.main-spin {
+      border: 0;
+      border-radius: 100px; /* Pill shape */
+      cursor: pointer;
+      font-weight: 900;
+      color: #fff;
+      background: radial-gradient(circle at 50% 20%, #ff4d4d, #b30000);
+      border: 2px solid #ff9999;
+      box-shadow: 
+        0 10px 0 #660000, 
+        0 20px 30px rgba(255, 0, 0, 0.4),
+        inset 0 4px 10px rgba(255,255,255,0.4);
       transition: transform .1s ease, box-shadow .1s ease, filter .2s;
-      font-size: 15px;
+      font-size: 24px;
+      padding: 22px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
       touch-action: manipulation; 
     }
-    button:hover { filter: brightness(1.1); }
-    button:active{ transform: translateY(6px); box-shadow: 0 0px 0 #cc8b00, 0 5px 10px rgba(255,209,102,.3); }
-    button:disabled{ opacity:.55; cursor:not-allowed; transform: translateY(6px); box-shadow: 0 0px 0 #cc8b00; filter: grayscale(1); }
+    button.main-spin:hover { filter: brightness(1.1); box-shadow: 0 10px 0 #660000, 0 20px 40px rgba(255, 0, 0, 0.6), inset 0 4px 10px rgba(255,255,255,0.4); }
+    button.main-spin:active, button.main-spin:disabled { 
+      transform: translateY(10px); 
+      box-shadow: 0 0px 0 #660000, 0 5px 10px rgba(255, 0, 0, 0.4), inset 0 4px 10px rgba(255,255,255,0.4); 
+    }
+    button.main-spin:disabled { filter: grayscale(0.8) brightness(0.7); cursor: not-allowed; }
     
-    .main-spin { font-size: 22px; padding: 20px; text-transform: uppercase; letter-spacing: 1.5px; }
-    
-    .ghost{
+    button.ghost{
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 12px;
+      padding: 12px;
       background: rgba(0,0,0,0.2);
       color: var(--text);
-      border: 1px solid rgba(255,255,255,.15);
+      font-weight: 700;
+      cursor: pointer;
       box-shadow: 0 4px 0 rgba(0,0,0,0.4);
+      transition: all 0.1s ease;
     }
-    .ghost:hover { background: rgba(255,255,255,0.1); }
-    .ghost:active { transform: translateY(4px); box-shadow: 0 0px 0 rgba(0,0,0,0.4); }
+    button.ghost:hover { background: rgba(255,255,255,0.1); }
+    button.ghost:active { transform: translateY(4px); box-shadow: 0 0px 0 rgba(0,0,0,0.4); }
     
     .field{
       width:100%;
@@ -263,14 +282,14 @@
       box-shadow: 0 10px 30px rgba(138,92,255,0.1);
     }
     .result.win-pop {
-      transform: scale(1.03);
+      transform: scale(1.05);
       border-color: var(--accent);
-      background: rgba(255, 209, 102, 0.15);
-      box-shadow: 0 0 30px rgba(255,209,102,0.3);
+      background: rgba(255, 209, 102, 0.2);
+      box-shadow: 0 0 40px rgba(255,209,102,0.4);
     }
 
     .result-text { display: flex; flex-direction: column; gap: 6px; }
-    .result b{ font-size:18px; color: #fff; line-height: 1.4; transition: color 0.3s; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    .result b{ font-size:18px; color: #fff; line-height: 1.4; transition: color 0.3s; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-weight: 800; }
     
     .edit-lab {
       width: 100%;
@@ -288,24 +307,28 @@
     .edit-lab label { font-size: 14px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
     .edit-lab .controls { display: flex; gap: 10px; }
     .edit-lab select { padding: 8px 12px; font-size: 13px; width: auto; }
-    .edit-lab button { padding: 8px 16px; font-size: 14px; box-shadow: 0 4px 0 rgba(0,0,0,0.4); }
-    .edit-lab button:active { box-shadow: 0 0px 0 rgba(0,0,0,0.4); transform: translateY(4px); }
+    .edit-lab button { padding: 8px 16px; font-size: 14px; }
 
-    /* 📱 IPHONE RESPONSIVE STYLES */
+    /* CONFETTI CANVAS */
+    #confettiCanvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* 📱 MOBILE TWEAKS */
     @media (max-width: 600px) {
-      :root {
-        --item-height: 60px; 
-      }
+      :root { var(--item-height): 60px; }
       body { padding: 10px; }
       .wrap { gap: 16px; width: 100%; }
       .card { padding: 16px; border-radius: 20px; }
       .slot-machine { padding: 10px; gap: 4px; border-radius: 16px; }
-      
       .reel-window { width: 30vw; border-radius: 8px; }
-      .slot-item { font-size: 12px; letter-spacing: -0.5px; padding: 0 2px; }
-      
-      h1 { font-size: 22px; }
-      .main-spin { font-size: 18px; padding: 16px; }
+      .slot-item { font-size: 14px; letter-spacing: -0.5px; padding: 0 2px; }
+      h1 { font-size: 24px; }
+      button.main-spin { font-size: 20px; padding: 16px; }
       .edit-lab { padding: 12px; border-radius: 16px; }
       .edit-lab .controls { flex-direction: column; width: 50%; }
       .edit-lab select { width: 100%; }
@@ -313,22 +336,24 @@
   </style>
 </head>
 <body>
+  <canvas id="confettiCanvas"></canvas>
+
   <div class="wrap">
     
     <div class="card" style="height: 100%;">
       <div>
-        <h1>🎰 Casino Chaos</h1>
-        <p>Pull the lever and pray to the RNG gods! 😈</p>
+        <h1>🎰 Casino VIP</h1>
+        <p>High stakes. Endless combos. 😈</p>
       </div>
 
       <div class="action-stack" style="margin-top: 10px;">
-        <button id="spinBtn" class="main-spin">SPIN REELS 🎰</button>
+        <button id="spinBtn" class="main-spin">SPIN REELS</button>
       </div>
 
       <div class="result" id="resultBox" style="margin-top: auto;">
         <div class="result-text">
-          <div style="font-size:13px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Winning Combo:</div>
-          <b id="lastResult">Ready to spin!</b>
+          <div style="font-size:13px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Winning Combo:</div>
+          <b id="lastResult">Ready to play!</b>
         </div>
       </div>
     </div>
@@ -369,54 +394,54 @@
       <div class="field">
         <label>Reel 1 Theme</label>
         <select id="cat1">
-          <option value="styles">Styles 🎨</option>
-          <option value="music">Music 🎧</option>
+          <option value="styles" selected>Image Styles 🎨</option>
+          <option value="music">Music Genres 🎧</option>
           <option value="emotions">Emotions 🎭</option>
-          <option value="mystery">Mystery 👻</option>
+          <option value="mystery">Spooky Mystery 👻</option>
           <option value="subjects">Subjects 🎃</option>
-          <option value="roles">Roles 👑</option>
-          <option value="places" selected>Places 🗺️</option>
+          <option value="roles">Roles & Titles 👑</option>
+          <option value="places">Places 🗺️</option>
           <option value="objects">Objects 🔮</option>
           <option value="creatures">Creatures 🐉</option>
-          <option value="custom1">Custom 1 📝</option>
-          <option value="custom2">Custom 2 📝</option>
-          <option value="custom3">Custom 3 📝</option>
+          <option value="custom1">Custom List 1 📝</option>
+          <option value="custom2">Custom List 2 📝</option>
+          <option value="custom3">Custom List 3 📝</option>
         </select>
       </div>
 
       <div class="field">
         <label>Reel 2 Theme</label>
         <select id="cat2">
-          <option value="styles">Styles 🎨</option>
-          <option value="music">Music 🎧</option>
+          <option value="styles">Image Styles 🎨</option>
+          <option value="music">Music Genres 🎧</option>
           <option value="emotions">Emotions 🎭</option>
-          <option value="mystery">Mystery 👻</option>
-          <option value="subjects">Subjects 🎃</option>
-          <option value="roles">Roles 👑</option>
+          <option value="mystery">Spooky Mystery 👻</option>
+          <option value="subjects" selected>Subjects 🎃</option>
+          <option value="roles">Roles & Titles 👑</option>
           <option value="places">Places 🗺️</option>
-          <option value="objects" selected>Objects 🔮</option>
+          <option value="objects">Objects 🔮</option>
           <option value="creatures">Creatures 🐉</option>
-          <option value="custom1">Custom 1 📝</option>
-          <option value="custom2">Custom 2 📝</option>
-          <option value="custom3">Custom 3 📝</option>
+          <option value="custom1">Custom List 1 📝</option>
+          <option value="custom2">Custom List 2 📝</option>
+          <option value="custom3">Custom List 3 📝</option>
         </select>
       </div>
 
       <div class="field">
         <label>Reel 3 Theme</label>
         <select id="cat3">
-          <option value="styles">Styles 🎨</option>
-          <option value="music">Music 🎧</option>
+          <option value="styles">Image Styles 🎨</option>
+          <option value="music">Music Genres 🎧</option>
           <option value="emotions">Emotions 🎭</option>
-          <option value="mystery">Mystery 👻</option>
+          <option value="mystery">Spooky Mystery 👻</option>
           <option value="subjects">Subjects 🎃</option>
-          <option value="roles">Roles 👑</option>
+          <option value="roles" selected>Roles & Titles 👑</option>
           <option value="places">Places 🗺️</option>
           <option value="objects">Objects 🔮</option>
-          <option value="creatures" selected>Creatures 🐉</option>
-          <option value="custom1">Custom 1 📝</option>
-          <option value="custom2">Custom 2 📝</option>
-          <option value="custom3">Custom 3 📝</option>
+          <option value="creatures">Creatures 🐉</option>
+          <option value="custom1">Custom List 1 📝</option>
+          <option value="custom2">Custom List 2 📝</option>
+          <option value="custom3">Custom List 3 📝</option>
         </select>
       </div>
     </div>
@@ -424,6 +449,67 @@
   </div>
 
   <script>
+    // --- CONFETTI SYSTEM ---
+    const canvas = document.getElementById('confettiCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    let particles = [];
+    let confettiActive = false;
+
+    class ConfettiParticle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height - canvas.height;
+        this.w = Math.random() * 10 + 5;
+        this.h = Math.random() * 10 + 5;
+        this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        this.speedY = Math.random() * 3 + 2;
+        this.speedX = Math.random() * 2 - 1;
+        this.rot = Math.random() * 360;
+        this.rotSpeed = Math.random() * 5 - 2.5;
+      }
+      update() {
+        this.y += this.speedY;
+        this.x += this.speedX;
+        this.rot += this.rotSpeed;
+        if (this.y > canvas.height) {
+          this.y = -10;
+          this.x = Math.random() * canvas.width;
+        }
+      }
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rot * Math.PI / 180);
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-this.w/2, -this.h/2, this.w, this.h);
+        ctx.restore();
+      }
+    }
+
+    function startConfetti() {
+      particles = [];
+      for(let i=0; i<150; i++) particles.push(new ConfettiParticle());
+      confettiActive = true;
+      setTimeout(() => confettiActive = false, 3000); // Stop generating after 3s
+      requestAnimationFrame(animateConfetti);
+    }
+
+    function animateConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => { p.update(); p.draw(); });
+      // Keep animating if active, or if particles are still on screen
+      if (confettiActive || particles.some(p => p.y < canvas.height)) {
+        requestAnimationFrame(animateConfetti);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+    
+    window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+
+    // --- SYNTHESIZED SOUND EFFECTS PRO ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx;
 
@@ -436,34 +522,47 @@
       if(!audioCtx) return;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(400 + Math.random() * 200, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.02, audioCtx.currentTime); 
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+      osc.type = 'square'; // harsher metallic tick
+      // Alternate pitches slightly to sound like teeth on a gear
+      osc.frequency.setValueAtTime(600 + (Math.random() > 0.5 ? 50 : 0), audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.015, audioCtx.currentTime); 
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.05);
+      osc.stop(audioCtx.currentTime + 0.03);
     }
 
     function playClunk() {
       if(!audioCtx) return;
-      const osc = audioCtx.createOscillator();
+      // Dual oscillator for a heavy, mechanical vault lock
+      const osc1 = audioCtx.createOscillator(); // Deep Bass Thud
+      const osc2 = audioCtx.createOscillator(); // Metallic Clack
       const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.4, audioCtx.currentTime); 
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
-      osc.connect(gain);
+      
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(120, audioCtx.currentTime);
+      osc1.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.2);
+      
+      osc2.type = 'sawtooth';
+      osc2.frequency.setValueAtTime(300, audioCtx.currentTime);
+      osc2.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+
+      gain.gain.setValueAtTime(0.5, audioCtx.currentTime); 
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+      
+      osc1.connect(gain);
+      osc2.connect(gain);
       gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.15);
+      
+      osc1.start(); osc2.start();
+      osc1.stop(audioCtx.currentTime + 0.2); osc2.stop(audioCtx.currentTime + 0.2);
     }
 
     function playWinChime() {
       if(!audioCtx) return;
-      const notes = [523.25, 659.25, 783.99, 1046.50];
+      // Fast, Vegas-style coin cascade (C major pentatonic run)
+      const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98, 2093.00];
       notes.forEach((freq, i) => {
         setTimeout(() => {
           const osc = audioCtx.createOscillator();
@@ -471,12 +570,12 @@
           osc.type = 'sine';
           osc.frequency.value = freq;
           gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
           osc.connect(gain);
           gain.connect(audioCtx.destination);
           osc.start();
-          osc.stop(audioCtx.currentTime + 1);
-        }, i * 100);
+          osc.stop(audioCtx.currentTime + 0.8);
+        }, i * 60); // Super fast 60ms delay between notes
       });
     }
 
@@ -523,9 +622,9 @@
         const prev = this.getRandomItem();
         const next = this.getRandomItem();
         this.stripEl.innerHTML = `
-          <div class="slot-item" style="color: #64748b">${prev}</div>
+          <div class="slot-item" style="color: #475569">${prev}</div>
           <div class="slot-item" style="color: #fff">${this.currentWinner}</div>
-          <div class="slot-item" style="color: #64748b">${next}</div>
+          <div class="slot-item" style="color: #475569">${next}</div>
         `;
       }
 
@@ -539,22 +638,22 @@
         const numSpins = Math.floor(duration / 100); 
         const newWinner = this.getRandomItem();
         
-        const computedHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--item-height'));
+        const computedHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--item-height')) || 80;
         
         let html = `
-          <div class="slot-item" style="color: #64748b">${this.getRandomItem()}</div>
+          <div class="slot-item" style="color: #475569">${this.getRandomItem()}</div>
           <div class="slot-item" style="color: #fff">${this.currentWinner}</div>
         `;
         
         const hueShift = Math.floor(Math.random() * 360);
         for(let i=0; i<numSpins; i++) {
-          const color = `hsl(${(hueShift + i*10) % 360}, 80%, 70%)`;
+          const color = `hsl(${(hueShift + i*10) % 360}, 90%, 65%)`;
           html += `<div class="slot-item" style="color: ${color}">${this.getRandomItem()}</div>`;
         }
         
         html += `
           <div class="slot-item" style="color: #ffd166">${newWinner}</div>
-          <div class="slot-item" style="color: #64748b">${this.getRandomItem()}</div>
+          <div class="slot-item" style="color: #475569">${this.getRandomItem()}</div>
         `;
 
         this.stripEl.style.transition = "none";
@@ -645,7 +744,7 @@
       updateResultText();
 
       if(tickerInterval) clearInterval(tickerInterval);
-      tickerInterval = setInterval(playTick, 80);
+      tickerInterval = setInterval(playTick, 80); // Fast mechanical tick
 
       r1.spin(3500, () => { updateResultText(); });
       r2.spin(5000, () => { updateResultText(); });
@@ -655,6 +754,7 @@
         
         clearInterval(tickerInterval);
         playWinChime();
+        startConfetti(); // Trigger the confetti cannon!
         resultBox.classList.add("win-pop");
         machineObj.classList.add("flash-payline");
       });
