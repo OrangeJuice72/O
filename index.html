@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0b1020">
+  <meta name="theme-color" content="#070b14">
   <link rel="apple-touch-icon" href="https://fonts.gstatic.com/s/e/notoemoji/latest/1f3b0/512.webp">
   
   <title>Creative Muse</title>
@@ -23,16 +23,10 @@
     *{box-sizing:border-box}
 
     html {
-      background-color: #0b1020; 
+      background-color: #070b14; 
       overscroll-behavior: none; 
     }
     
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
     body{
       margin:0;
       min-height:100vh;
@@ -40,9 +34,9 @@
       display:flex;
       flex-direction: column;
       align-items: center;
-      background: linear-gradient(-45deg, #070b14, #1b1233, #081519, #0a1126);
-      background-size: 400% 400%;
-      animation: gradientBG 20s ease infinite;
+      /* ECO MODE: Static deep background instead of an animation */
+      background: #070b14;
+      background-image: radial-gradient(circle at 50% 0%, #1b1233, #070b14 80%);
       color:var(--text);
       font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       overflow-x: hidden;
@@ -180,7 +174,8 @@
       z-index: 2;
     }
 
-    .spinning .reel-strip { filter: blur(2px); }
+    /* ECO MODE: Removed the blur filter for extreme battery saving! */
+    /* .spinning .reel-strip { filter: blur(2px); } */
     
     /* SPIN & RESULT LAYOUT */
     .action-stack {
@@ -591,10 +586,7 @@
     const categoryData = {
       actions: ["Running", "Jumping", "Whispering", "Screaming", "Flying", "Falling", "Dancing", "Fighting", "Weeping", "Laughing", "Hiding", "Seeking", "Hunting", "Sleeping", "Praying", "Meditating", "Building", "Destroying", "Swimming", "Climbing", "Crawling", "Teleporting", "Casting", "Summoning", "Betraying", "Kissing", "Embracing", "Punching", "Kicking", "Dodging", "Blocking", "Stealing", "Giving", "Singing", "Reading", "Writing", "Painting", "Sculpting", "Crafting", "Cooking", "Eating", "Drinking", "Scheming", "Plotting", "Escaping", "Rescuing", "Exploring", "Discovering", "Inventing"],
       animals: ["Wolf", "Fox", "Bear", "Lion", "Tiger", "Panther", "Eagle", "Hawk", "Owl", "Raven", "Crow", "Snake", "Lizard", "Crocodile", "Shark", "Dolphin", "Whale", "Octopus", "Squid", "Crab", "Spider", "Scorpion", "Bee", "Butterfly", "Moth", "Stag", "Deer", "Horse", "Unicorn", "Pegasi", "Elephant", "Rhino", "Hippo", "Giraffe", "Monkey", "Ape", "Gorilla", "Chimpanzee", "Sloth", "Koala", "Kangaroo", "Penguin", "Seal", "Walrus", "Polar Bear", "Moose", "Camel", "Alpaca", "Llama", "Dragon"],
-      
-      /* THE NEW BODY PARTS LIST */
       body: ["Head", "Brain", "Eye", "Ear", "Nose", "Mouth", "Lip", "Tooth", "Tongue", "Jaw", "Chin", "Cheek", "Forehead", "Neck", "Throat", "Shoulder", "Arm", "Elbow", "Forearm", "Wrist", "Hand", "Palm", "Finger", "Thumb", "Knuckle", "Nail", "Chest", "Rib", "Heart", "Lung", "Stomach", "Liver", "Kidney", "Spine", "Back", "Waist", "Hip", "Pelvis", "Leg", "Thigh", "Knee", "Calf", "Ankle", "Foot", "Heel", "Toe", "Skin", "Muscle", "Bone", "Vein", "Artery"],
-      
       colors: ["Crimson", "Scarlet", "Burgundy", "Ruby", "Vermilion", "Orange", "Amber", "Peach", "Apricot", "Tangerine", "Gold", "Yellow", "Lemon", "Mustard", "Chartreuse", "Green", "Emerald", "Jade", "Forest", "Mint", "Teal", "Cyan", "Turquoise", "Blue", "Sapphire", "Azure", "Cobalt", "Navy", "Indigo", "Violet", "Purple", "Amethyst", "Lavender", "Magenta", "Pink", "Rose", "Fuchsia", "White", "Pearl", "Ivory", "Snow", "Gray", "Silver", "Ash", "Charcoal", "Black", "Obsidian", "Onyx", "Brown", "Bronze"],
       emotions: ["Joy", "Sorrow", "Anger", "Fear", "Disgust", "Surprise", "Anticipation", "Trust", "Love", "Hate", "Jealousy", "Envy", "Guilt", "Shame", "Pride", "Awe", "Wonder", "Curiosity", "Boredom", "Apathy", "Relief", "Frustration", "Confusion", "Epiphany", "Nostalgia", "Melancholy", "Despair", "Hope", "Courage", "Cowardice", "Passion", "Serenity", "Anxiety", "Panic", "Calm", "Fury", "Rage", "Bliss", "Ecstasy", "Grief", "Regret", "Remorse", "Pity", "Sympathy", "Empathy", "Spite", "Malice", "Vengeance", "Forgiveness"],
       romance: ["Star-crossed", "Secret Admirer", "Forbidden Love", "Enemies to Lovers", "Fake Dating", "Soulmates", "First Kiss", "Slow Burn", "Unrequited Love", "Passionate Embrace", "Midnight Rendezvous", "Love Triangle", "Arranged Marriage", "Runaway Bride", "Childhood Friends", "Second Chance", "Love at First Sight", "Flirting", "Seduction", "Jealous Lover", "Tragic Romance", "Heartbreak", "Devotion", "Obsession", "Charming Rogue", "Damsel in Distress", "Knight in Shining Armor", "Fairy Tale Romance", "Office Romance", "Summer Fling", "Blind Date", "Matchmaker", "Love Potion", "Cupid's Arrow", "Romantic Dinner", "Starlit Walk", "Serenading", "Love Letter", "Poetry", "Roses", "Chocolates", "Engagement Ring", "Wedding Vows", "Honeymoon", "Anniversary", "Growing Old Together", "Widowed", "Rekindled Flame", "Hopeless Romantic"],
