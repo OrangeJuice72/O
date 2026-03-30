@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Stair Drop+" />
+  <meta name="theme-color" content="#08111f" />
+  <title>Stair Drop+</title>
+  <link rel="manifest" href="manifest.webmanifest?v=20260321f" />
+  <link rel="icon" type="image/png" sizes="1024x1024" href="icon.png?v=20260321f" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icon.png?v=20260321f" />
+  <link rel="apple-touch-icon-precomposed" href="icon.png?v=20260321f" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <link rel="stylesheet" href="styles.css?v=20260321f" />
+</head>
+<body>
+  <div class="ambient-orb orb-1"></div>
+  <div class="ambient-orb orb-2"></div>
+  <div class="ambient-orb orb-3"></div>
+  <div id="game-background" aria-hidden="true"></div>
+
+  <div id="hud" class="glass-panel panel-sheen">
+    <div class="hud-topline">
+      <div class="ui-tag hud-tag">Live Run Telemetry</div>
+      <div id="status-pill">Ready</div>
+    </div>
+    <div class="compact-hud">
+      <div class="hud-block hud-block-primary">
+        <div class="hud-label">Steps</div>
+        <div class="hud-value" id="steps-display">0</div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-label">Speed</div>
+        <div class="hud-value" id="speed-display">0.0</div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-label">Distance</div>
+        <div class="hud-value" id="distance-display">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="top-controls">
+    <button class="mini-btn" onclick="togglePause()">Pause</button>
+  </div>
+
+  <div id="perk-actions"></div>
+
+  <div id="legend" class="glass-panel panel-sheen">
+    <h4>Special Stairs</h4>
+    <div class="legend-list">
+      <div class="legend-item"><span class="legend-dot" style="background:#56d7ff"></span> Dash</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#ff61ee"></span> Chaos</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#79e38d"></span> Bounce</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#ffb35c"></span> Sticky</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#dff9ff"></span> Ice</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#ff7a7a"></span> Break</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#7a7cff"></span> Gravity</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#d7ecff"></span> Glass</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#c27dff"></span> Roulette</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#94a3ff"></span> Portal</div>
+    </div>
+  </div>
+
+  <div id="main-menu" class="screen-overlay">
+    <div class="overlay-stack overlay-stack-menu">
+      <div class="overlay-copy">
+        <div class="ui-tag">Arcade Physics Runner</div>
+        <h1 class="menu-title">
+          <span class="title-top">Stair</span>
+          <span class="title-bottom">Drop+</span>
+        </h1>
+        <p class="subtitle">
+          Infinite stairs. How far can you go?
+        </p>
+      </div>
+
+      <div class="record-card overlay-card">
+        <div class="record-row"><span>Best Steps</span><span id="menu-best-steps">0</span></div>
+        <div class="record-row"><span>Fastest Speed</span><span id="menu-fastest-speed">0</span></div>
+        <div class="record-row"><span>Furthest Distance</span><span id="menu-furthest-distance">0</span></div>
+      </div>
+
+      <div class="overlay-card overlay-actions-card">
+        <div class="menu-actions">
+          <button class="primary-btn" onclick="startGame()">Play</button>
+          <button class="primary-btn" onclick="openShop()">Shop</button>
+          <button class="secondary-btn danger-btn" onclick="openChallenges()">Achievements</button>
+          <button class="secondary-btn" onclick="openSettings()">Settings</button>
+        </div>
+      </div>
+
+      <div class="menu-footer">Launch. Chain. Climb. Repeat.</div>
+    </div>
+  </div>
+
+  <div id="settings-panel" class="glass-panel panel-sheen">
+    <div class="shop-header">
+      <div class="ui-tag">Settings</div>
+      <h2 class="shop-title">Settings</h2>
+      <p class="shop-subtitle">Manage your saved records.</p>
+    </div>
+    <div class="card-list">
+      <div class="info-card">
+        <h4>Reset High Stats</h4>
+        <p>Clears your saved best steps, fastest speed, furthest distance, best combo, and high score.</p>
+        <div style="margin-top:12px;">
+          <button class="secondary-btn danger-btn" onclick="resetHighStats()">Reset High Stats</button>
+        </div>
+      </div>
+    </div>
+    <div class="menu-actions" style="margin-top:20px;">
+      <button class="secondary-btn" onclick="closeSettings()">Back to Menu</button>
+    </div>
+  </div>
+
+  <div id="shop-menu" class="glass-panel panel-sheen">
+    <div class="shop-header">
+      <div class="ui-tag">Customization & Upgrades</div>
+      <h2 class="shop-title">Upgrade Bay</h2>
+      <p class="shop-subtitle">Pick your style.</p>
+    </div>
+
+    <div class="shop-tabs">
+      <button class="tab-btn active" onclick="switchShopTab('skins')" id="tab-skins">Skins</button>
+      <button class="tab-btn" onclick="switchShopTab('trails')" id="tab-trails">Trails</button>
+    </div>
+
+    <div class="shop-section">
+      <h3 id="shop-section-title">Cube Skins</h3>
+      <div id="shop-content" class="shop-grid"></div>
+    </div>
+
+    <div class="menu-actions" style="margin-top:20px;">
+      <button class="secondary-btn danger-btn" onclick="closeShop()">Back to Menu</button>
+    </div>
+  </div>
+
+  <div id="challenge-panel" class="glass-panel panel-sheen">
+    <div class="shop-header">
+      <div class="ui-tag">Progress</div>
+      <h2 class="shop-title">Achievements</h2>
+      <p class="shop-subtitle">Little goals to make every run mean something.</p>
+    </div>
+    <div class="card-list" id="challenge-list"></div>
+    <div class="menu-actions" style="margin-top:20px;">
+      <button class="secondary-btn danger-btn" onclick="closeChallenges()">Close</button>
+    </div>
+  </div>
+
+  <div id="perk-panel" class="glass-panel panel-sheen">
+    <div class="shop-header">
+      <div class="ui-tag">Mid-run Choice</div>
+      <h2 class="shop-title">Pick a Perk</h2>
+      <p class="shop-subtitle">Choose one boost and keep the run alive.</p>
+    </div>
+    <div class="perk-grid" id="perk-list"></div>
+  </div>
+
+  <div id="pause-panel" class="screen-overlay">
+    <div class="overlay-stack overlay-stack-pause">
+      <div class="overlay-card glass-panel panel-sheen pause-card">
+        <div class="shop-header">
+          <div class="ui-tag">Run Paused</div>
+          <h2 class="shop-title">Pause Menu</h2>
+          <p class="shop-subtitle">Take a breath or jump back in.</p>
+        </div>
+        <div class="menu-actions">
+          <button class="primary-btn" onclick="togglePause()">Resume</button>
+          <button class="secondary-btn" onclick="openChallenges()">Goals</button>
+          <button class="primary-btn gold-btn" onclick="startGame()">Restart Run</button>
+          <button class="secondary-btn danger-btn" onclick="showMainMenu()">Main Menu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="game-over" class="screen-overlay">
+    <div class="overlay-stack overlay-stack-results">
+      <div class="overlay-card glass-panel panel-sheen result-panel">
+        <div class="shop-header">
+          <div class="result-badge ui-tag">Run Complete</div>
+          <h2 id="game-over-title">Game Over</h2>
+          <p class="shop-subtitle">Catch your breath, check the run, then dive back in.</p>
+        </div>
+
+        <div class="info-card result-score-card">
+          <div class="result-score">
+            Steps
+            <span id="final-steps">0</span>
+          </div>
+        </div>
+
+        <div class="card-list result-summary-list">
+          <div class="info-card earned-wrap">
+            Best Combo: <span id="best-combo-run">x1</span>
+          </div>
+          <div class="info-card earned-wrap">
+            Best Steps: <span id="game-over-best-steps">0</span>
+          </div>
+          <div class="run-breakdown" id="run-breakdown"></div>
+        </div>
+
+        <div class="result-actions">
+          <button class="primary-btn" onclick="startGame()">Play Again</button>
+          <button class="secondary-btn danger-btn" onclick="showMainMenu()">Main Menu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="src/config.js?v=20260321f"></script>
+  <script src="src/storage.js?v=20260321f"></script>
+  <script src="src/game.js?v=20260321f"></script>
+</body>
+</html>
