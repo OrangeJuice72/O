@@ -918,6 +918,10 @@
       return true;
     }
 
+    function hasRescuePerkCharge() {
+      return (perkCharges.bump || 0) > 0 || (perkCharges.slam || 0) > 0 || (perkCharges.relaunch || 0) > 0;
+    }
+
     function usePerkAction(id) {
       if (!cube || !isLaunched || gameOver || hasWon || isPaused || perkPaused) return false;
 
@@ -2702,6 +2706,11 @@
       const lastStair = stairsArr.length ? stairsArr[stairsArr.length - 1] : null;
       const deathY = lastStair ? lastStair.position.y + Math.max(500, height * 0.7) : cube.position.y + 9999;
       if (stationaryFrames > 120 || cube.position.y > deathY) {
+        if (hasRescuePerkCharge()) {
+          stationaryFrames = 0;
+          setStatus("Use Perk To Recover", "idle");
+          return;
+        }
         setStatus("Run Failed", "danger");
         triggerGameOver();
       }
