@@ -497,6 +497,7 @@
     let launchOrigin = { x: 0, y: 0 };
     let recentStairContact = { id: null, time: 0 };
     let slamLockUntil = 0;
+    let portalGraceUntil = 0;
     let relaunchPrimed = false;
     let relaunchReadyAt = 0;
     let launchContext = "normal";
@@ -1924,8 +1925,13 @@
         if (stair.plugin.portalTarget) {
           const t = stair.plugin.portalTarget;
           const exitDir = Math.sign(cube.velocity.x || lastLaunchVector.x || 1) || 1;
-          Body.setPosition(cube, { x: t.position.x + exitDir * 14, y: t.position.y - 82 });
-          Body.setVelocity(cube, { x: exitDir * 10, y: -14 });
+          const portalExit = { x: t.position.x + exitDir * 18, y: t.position.y - 110 };
+          Body.setPosition(cube, portalExit);
+          Body.setVelocity(cube, { x: exitDir * 12, y: -18 });
+          lastLaunchVector = Vector.normalise({ x: exitDir, y: -1 });
+          stationaryFrames = 0;
+          recentStairContact = { id: null, time: 0 };
+          portalGraceUntil = performance.now() + 650;
           showPopup("PORTAL", t.position.x, t.position.y - 36, "#b4beff");
           setStatus(sourceEffect === "roulette" ? "Roulette Warp" : "Warp Jump", "live");
           shake(8);
@@ -2684,6 +2690,11 @@
 
     Events.on(engine, "afterUpdate", function() {
       if (gameOver || hasWon || !isLaunched || isPaused || perkPaused) return;
+
+      if (performance.now() < portalGraceUntil) {
+        stationaryFrames = 0;
+        return;
+      }
 
       if (Math.abs(cube.velocity.x) < 0.1 && Math.abs(cube.velocity.y) < 0.1) stationaryFrames++;
       else stationaryFrames = 0;
