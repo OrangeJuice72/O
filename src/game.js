@@ -25,7 +25,6 @@
       Bounds = Matter.Bounds;
 
     const progress = loadProgressState();
-    let coins = progress.coins;
     let unlockedCubes = progress.unlockedCubes;
     let unlockedStairs = progress.unlockedStairs;
     let unlockedTrails = progress.unlockedTrails;
@@ -46,25 +45,8 @@
     let stats = progress.stats;
     stats.totalWins = stats.totalWins || 0;
 
-    let claimedChallenges = progress.claimedChallenges;
-
-    const challenges = [
-      { id: "steps25", name: "Reach 25 steps in a run", check: () => runStats.steps >= 25 },
-      { id: "steps50", name: "Reach 50 steps in a run", check: () => runStats.steps >= 50 },
-      { id: "steps100", name: "Reach 100 steps in a run", check: () => runStats.steps >= 100 },
-      { id: "steps200", name: "Reach 200 steps in a run", check: () => runStats.steps >= 200 },
-      { id: "steps500", name: "Reach 500 steps in a run", check: () => runStats.steps >= 500 },
-      { id: "combo5", name: "Hit a x5 combo", check: () => runStats.bestCombo >= 5 },
-      { id: "combo10", name: "Hit a x10 combo", check: () => runStats.bestCombo >= 10 },
-      { id: "perfect3", name: "Land 3 perfect launches total", check: () => stats.perfectLaunches >= 3 },
-      { id: "special20", name: "Touch 20 special stairs total", check: () => stats.specialHits >= 20 },
-      { id: "jump50", name: "Jump over 50 steps in one launch", check: () => runStats.maxStepSkip >= 50 },
-      { id: "special_run", name: "Hit 8 special stairs in one run", check: () => runStats.specialHits >= 8 }
-    ];
-
     function saveGame() {
       persistProgressState({
-        coins: 0,
         unlockedCubes,
         unlockedStairs,
         unlockedTrails,
@@ -74,8 +56,7 @@
         equippedTrail,
         equippedEffect,
         purchasedUpgrades,
-        stats,
-        claimedChallenges
+        stats
       });
       updateRecordDisplays();
     }
@@ -84,9 +65,6 @@
     function queueSave(delay = 250) {
       clearTimeout(saveTimer);
       saveTimer = setTimeout(saveGame, delay);
-    }
-
-    function updateCoinDisplays() {
     }
 
     function updateRecordDisplays() {
@@ -568,13 +546,6 @@
     function normalizeUiCopy() {
       const topButtons = document.querySelectorAll("#top-controls .mini-btn");
       if (topButtons[0]) topButtons[0].textContent = "Pause";
-      if (topButtons[1]) topButtons[1].textContent = "Goals";
-
-      const challengeTitle = document.querySelector("#challenge-panel .shop-title");
-      if (challengeTitle) challengeTitle.textContent = "Achievements";
-
-      const challengeButton = document.querySelector("#main-menu .menu-actions .secondary-btn");
-      if (challengeButton) challengeButton.textContent = "Achievements";
 
       const subtitle = document.querySelector("#main-menu .subtitle");
       if (subtitle) subtitle.textContent = "Infinite stairs. How far can you go?";
@@ -618,7 +589,6 @@
       const hudVisible = document.getElementById("hud").style.display === "block";
       const modalOpen =
         document.getElementById("shop-menu").style.display === "block" ||
-        document.getElementById("challenge-panel").style.display === "block" ||
         document.getElementById("settings-panel").style.display === "block" ||
         document.getElementById("perk-panel").style.display === "block" ||
         document.getElementById("pause-panel").style.display === "block" ||
@@ -993,23 +963,6 @@
 
       return false;
     }
-    function openChallenges() {
-      document.getElementById("challenge-panel").style.display = "block";
-      document.getElementById("main-menu").style.display = "none";
-      setCanvasInput(false);
-      refreshInRunControls();
-      renderChallenges();
-    }
-
-    function closeChallenges() {
-      document.getElementById("challenge-panel").style.display = "none";
-      if (document.getElementById("hud").style.display !== "block") {
-        document.getElementById("main-menu").style.display = "block";
-      }
-      setCanvasInput(document.getElementById("hud").style.display === "block" && !perkPaused);
-      refreshInRunControls();
-    }
-
     function openSettings() {
       document.getElementById("settings-panel").style.display = "block";
       document.getElementById("main-menu").style.display = "none";
@@ -1038,11 +991,11 @@
 
       saveGame();
       updateHud();
-      renderChallenges();
       setStatus("High Stats Reset", "idle");
     }
 
     function renderChallenges() {
+      return;
       const wrap = document.getElementById("challenge-list");
       wrap.innerHTML = "";
 
@@ -1075,6 +1028,7 @@
     }
 
     function claimChallenge(id) {
+      return;
       if (claimedChallenges.includes(id)) return;
       const ch = challenges.find(c => c.id === id);
       if (!ch || !ch.check()) return;
@@ -1317,7 +1271,6 @@
       engine.timing.timeScale = 1;
       document.getElementById("game-over").style.display = "none";
       document.getElementById("shop-menu").style.display = "none";
-      document.getElementById("challenge-panel").style.display = "none";
       document.getElementById("settings-panel").style.display = "none";
       document.getElementById("perk-panel").style.display = "none";
       document.getElementById("pause-panel").style.display = "none";
@@ -1339,7 +1292,6 @@
       engine.timing.timeScale = 1;
       document.getElementById("main-menu").style.display = "none";
       document.getElementById("shop-menu").style.display = "none";
-      document.getElementById("challenge-panel").style.display = "none";
       document.getElementById("settings-panel").style.display = "none";
       document.getElementById("perk-panel").style.display = "none";
       document.getElementById("pause-panel").style.display = "none";
@@ -1370,13 +1322,17 @@
         furthestDistance: 0
       };
       speedTrackingActive = false;
+      const speedDisplay = document.getElementById("speed-display");
+      const distanceDisplay = document.getElementById("distance-display");
+      if (speedDisplay) speedDisplay.innerText = "0";
+      if (distanceDisplay) distanceDisplay.innerText = "0";
 
       stats.gamesPlayed++;
       queueSave();
-      updateHud();
       updatePerkActionButtons();
       setStatus("Aiming", "idle");
       generateLevel(true);
+      updateHud();
     }
 
     function togglePause() {
@@ -1469,6 +1425,39 @@
       return { stair, stepWidth };
     }
 
+    function getFarthestStairX() {
+      return stairsArr.length ? stairsArr[stairsArr.length - 1].position.x : 0;
+    }
+
+    function reserveStairsThrough(targetX, buffer = width * 1.5) {
+      const desiredX = targetX + buffer;
+      let farthestStairX = getFarthestStairX();
+      let safety = 0;
+      while (farthestStairX < desiredX && safety < 10) {
+        generateMoreStairs(30, true);
+        farthestStairX = getFarthestStairX();
+        safety++;
+      }
+    }
+
+    function reserveLandingCorridor(originX, velocityX = 0, extraLead = width * 4) {
+      const projectedX = originX + Math.max(extraLead, Math.abs(velocityX) * 30);
+      reserveStairsThrough(projectedX);
+    }
+
+    function findForwardWarpTarget(sourceStair) {
+      if (!sourceStair?.plugin) return null;
+      const sourceIndex = sourceStair.plugin.index ?? 0;
+      const activeStairs = stairsArr.filter(s => Composite.get(world, s.id, "body"));
+      const forwardPortal = activeStairs.find(s => s.id !== sourceStair.id && s.label.includes("portal") && (s.plugin?.index ?? -1) > sourceIndex);
+      if (forwardPortal) return forwardPortal;
+
+      const safeForwardStair = activeStairs.find(s => (s.plugin?.index ?? -1) >= sourceIndex + 6);
+      if (safeForwardStair) return safeForwardStair;
+
+      return activeStairs.find(s => (s.plugin?.index ?? -1) > sourceIndex) || null;
+    }
+
     function generateMoreStairs(count, isPlayable) {
       const activeTheme = stairThemes.find(t => t.id === equippedStair) || stairThemes[0];
       const stageStart = getStageStartConfig(isPlayable);
@@ -1502,7 +1491,7 @@
     function linkNewPortals(newStairs) {
       const portals = stairsArr.filter(s => s.label.includes("portal") && Composite.get(world, s.id, "body"));
       for (let i = 0; i < portals.length; i++) {
-        const next = portals[(i + 1) % portals.length];
+        const next = portals.slice(i + 1).find(portal => Composite.get(world, portal.id, "body")) || null;
         portals[i].plugin.portalTarget = next;
       }
     }
@@ -1526,12 +1515,7 @@
 
     function ensureStairsAhead() {
       if (!cube) return;
-      const cubeX = cube.position.x;
-      const lookAhead = width * 4;
-      const farthestStair = stairsArr.length ? stairsArr[stairsArr.length - 1].position.x : 0;
-      if (farthestStair < cubeX + lookAhead) {
-        generateMoreStairs(30, true);
-      }
+      reserveLandingCorridor(cube.position.x, cube.velocity.x, width * 4);
     }
 
     function generateLevel(isPlayable) {
@@ -1564,6 +1548,7 @@
       launchOrigin = { x: 0, y: 0 };
       recentStairContact = { id: null, time: 0 };
       slamLockUntil = 0;
+      portalGraceUntil = 0;
       relaunchPrimed = false;
       launchContext = "normal";
 
@@ -1776,13 +1761,12 @@
       const shopOpen = document.getElementById("shop-menu").style.display === "block";
       const menuOpen = document.getElementById("main-menu").style.display === "block";
       const gameOverOpen = document.getElementById("game-over").style.display === "block";
-      const challengeOpen = document.getElementById("challenge-panel").style.display === "block";
       const settingsOpen = document.getElementById("settings-panel").style.display === "block";
       const perkOpen = document.getElementById("perk-panel").style.display === "block";
       const pauseOpen = document.getElementById("pause-panel").style.display === "block";
 
       if (!isDragging) {
-        if (!(shopOpen || menuOpen || gameOverOpen || challengeOpen || settingsOpen || perkOpen || pauseOpen)) {
+        if (!(shopOpen || menuOpen || gameOverOpen || settingsOpen || perkOpen || pauseOpen)) {
           e.preventDefault();
         }
         return;
@@ -1873,6 +1857,7 @@
     function applySpecialEffect(stair, effect, sourceEffect = effect) {
       if (effect === "dash") {
         Body.setVelocity(cube, { x: 22, y: -4 });
+        reserveLandingCorridor(cube.position.x, 22, width * 5);
         setStatus(sourceEffect === "roulette" ? "Roulette Dash" : "Dash Boost", "live");
         shake(5);
         return;
@@ -1882,6 +1867,7 @@
         let randX = (Math.random() - 0.5) * 40;
         let randY = -15 - Math.random() * 15;
         Body.setVelocity(cube, { x: randX, y: randY });
+        if (randX > 0) reserveLandingCorridor(cube.position.x, randX, width * 5);
         setStatus(sourceEffect === "roulette" ? "Roulette Chaos" : "Chaos Kick", "danger");
         shake(6);
         return;
@@ -1896,6 +1882,7 @@
           setStatus("Slam Impact", "danger");
         } else {
           Body.setVelocity(cube, { x: cube.velocity.x * 1.18, y: -18 });
+          reserveLandingCorridor(cube.position.x, cube.velocity.x * 1.18, width * 5);
           setStatus(sourceEffect === "roulette" ? "Roulette Bounce" : "Bounce Boost", "live");
           shake(7);
         }
@@ -1921,15 +1908,14 @@
         return;
       }
 
-      if (effect === "coin") {
-        return;
-      }
-
       if (effect === "portal") {
+        reserveStairsThrough(stair.position.x + width * 6, width * 2);
+        stair.plugin.portalTarget = findForwardWarpTarget(stair);
         if (stair.plugin.portalTarget) {
           const t = stair.plugin.portalTarget;
           const exitDir = Math.sign(cube.velocity.x || lastLaunchVector.x || 1) || 1;
           const portalExit = { x: t.position.x + exitDir * 18, y: t.position.y - 110 };
+          reserveLandingCorridor(portalExit.x, exitDir * 12, width * 5);
           Body.setPosition(cube, portalExit);
           Body.setVelocity(cube, { x: exitDir * 12, y: -18 });
           lastLaunchVector = Vector.normalise({ x: exitDir, y: -1 });
@@ -1939,6 +1925,10 @@
           showPopup("PORTAL", t.position.x, t.position.y - 36, "#b4beff");
           setStatus(sourceEffect === "roulette" ? "Roulette Warp" : "Warp Jump", "live");
           shake(8);
+        } else {
+          Body.setVelocity(cube, { x: Math.max(10, cube.velocity.x), y: -12 });
+          reserveLandingCorridor(cube.position.x, Math.max(10, cube.velocity.x), width * 4);
+          setStatus("Portal Charging", "idle");
         }
         return;
       }
@@ -1951,6 +1941,7 @@
             x: launchDir * Math.max(12, Math.abs(cube.velocity.x) * 1.15),
             y: -22
           });
+          reserveLandingCorridor(cube.position.x, launchDir * Math.max(12, Math.abs(cube.velocity.x) * 1.15), width * 5);
           showPopup("PUSH", stair.position.x, stair.position.y - 34, "#86f1ff");
           setStatus(sourceEffect === "roulette" ? "Roulette Push" : "Gravity Push", "live");
         } else {
@@ -1965,14 +1956,20 @@
         return;
       }
 
-      if (effect === "glass") {
-        if (!brokenStairs.has(stair.id)) {
-          brokenStairs.add(stair.id);
-          stair.plugin.breakTimer = 1;
-          Body.setVelocity(cube, { x: cube.velocity.x * 0.82, y: Math.max(-2, cube.velocity.y * 0.2) });
-          showPopup("SHATTER", stair.position.x, stair.position.y - 34, "#e7f7ff");
-          setStatus("Glass Step", "danger");
-        }
+        if (effect === "glass") {
+          if (!brokenStairs.has(stair.id)) {
+            brokenStairs.add(stair.id);
+            stair.plugin.breakTimer = 16;
+            stair.plugin.breakProgress = 0;
+            stair.plugin.breakDriftX = (Math.random() - 0.5) * 4.5;
+            stair.plugin.breakDropY = 0;
+            stair.plugin.breakVelocityY = 5.5 + Math.random() * 2.5;
+            stair.plugin.breakSpin = (Math.random() - 0.5) * 0.16;
+            stair.isSensor = true;
+            Body.setVelocity(cube, { x: cube.velocity.x * 0.82, y: Math.max(-2, cube.velocity.y * 0.2) });
+            showPopup("SHATTER", stair.position.x, stair.position.y - 34, "#e7f7ff");
+            setStatus("Glass Step", "danger");
+          }
         return;
       }
 
@@ -2031,7 +2028,6 @@
       `;
 
       saveGame();
-      renderChallenges();
       updateHud();
     }
 
@@ -2057,6 +2053,14 @@
         if (stair.plugin.flash > 0) stair.plugin.flash -= 0.08;
         if (stair.plugin.breakTimer != null) {
           stair.plugin.breakTimer -= 1;
+          stair.plugin.breakProgress = 1 - Math.max(0, stair.plugin.breakTimer) / 16;
+          stair.plugin.breakDropY = (stair.plugin.breakDropY || 0) + (stair.plugin.breakVelocityY || 0);
+          stair.plugin.breakVelocityY = (stair.plugin.breakVelocityY || 0) + 1.35;
+          Body.setPosition(stair, {
+            x: stair.position.x + (stair.plugin.breakDriftX || 0),
+            y: stair.position.y + (stair.plugin.breakDropY || 0)
+          });
+          Body.setAngle(stair, stair.angle + (stair.plugin.breakSpin || 0));
           if (stair.plugin.breakTimer <= 0) {
             if (Composite.get(world, stair.id, "body")) Composite.remove(world, stair);
             stair.plugin.breakTimer = null;
@@ -2066,6 +2070,11 @@
         const baseWidth = fx === "normal" ? 2.2 : 2.4;
         stair.render.lineWidth = baseWidth + flashMix * 1.8;
         stair.render.strokeStyle = stair.plugin.originalStroke;
+        if (stair.plugin.breakProgress != null) {
+          stair.render.opacity = Math.max(0, 1 - stair.plugin.breakProgress * 1.25);
+        } else {
+          stair.render.opacity = 1;
+        }
       });
 
       if (cube && !gameOver && document.getElementById("hud").style.display === "block") {
@@ -2207,10 +2216,6 @@
         } else if (effect === "portal") {
           ctx.beginPath();
           ctx.arc(0, 0, 8 + pulse * 3, 0, Math.PI * 2);
-          ctx.stroke();
-        } else if (effect === "coin") {
-          ctx.beginPath();
-          ctx.arc(0, 0, 8, 0, Math.PI * 2);
           ctx.stroke();
         } else if (effect === "ice") {
           ctx.beginPath();
@@ -2431,7 +2436,6 @@
         bouncy: "B",
         sticky: "S",
         ice: "I",
-        coin: "$",
         portal: "P",
         gravity: "G",
         glass: "GL",
@@ -2758,14 +2762,11 @@
 
     Object.assign(window, {
       switchShopTab,
-      openChallenges,
-      closeChallenges,
       openSettings,
       closeSettings,
       resetHighStats,
       openShop,
       closeShop,
-      claimChallenge,
       buyCube,
       equipCube,
       buyStair,

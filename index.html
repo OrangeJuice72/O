@@ -87,7 +87,6 @@
         <div class="menu-actions">
           <button class="primary-btn" onclick="startGame()">Play</button>
           <button class="primary-btn" onclick="openShop()">Shop</button>
-          <button class="secondary-btn danger-btn" onclick="openChallenges()">Achievements</button>
           <button class="secondary-btn" onclick="openSettings()">Settings</button>
         </div>
       </div>
@@ -138,18 +137,6 @@
     </div>
   </div>
 
-  <div id="challenge-panel" class="glass-panel panel-sheen">
-    <div class="shop-header">
-      <div class="ui-tag">Progress</div>
-      <h2 class="shop-title">Achievements</h2>
-      <p class="shop-subtitle">Little goals to make every run mean something.</p>
-    </div>
-    <div class="card-list" id="challenge-list"></div>
-    <div class="menu-actions" style="margin-top:20px;">
-      <button class="secondary-btn danger-btn" onclick="closeChallenges()">Close</button>
-    </div>
-  </div>
-
   <div id="perk-panel" class="glass-panel panel-sheen">
     <div class="shop-header">
       <div class="ui-tag">Mid-run Choice</div>
@@ -169,7 +156,6 @@
         </div>
         <div class="menu-actions">
           <button class="primary-btn" onclick="togglePause()">Resume</button>
-          <button class="secondary-btn" onclick="openChallenges()">Goals</button>
           <button class="primary-btn gold-btn" onclick="startGame()">Restart Run</button>
           <button class="secondary-btn danger-btn" onclick="showMainMenu()">Main Menu</button>
         </div>

@@ -2,7 +2,6 @@
   function createDefaultStats() {
     return {
       lifetimeSteps: 0,
-      lifetimeCoins: 0,
       highestCombo: 1,
       gamesPlayed: 0,
       totalWins: 0,
@@ -23,7 +22,6 @@
     stats.furthestDistance = stats.furthestDistance || 0;
 
     return {
-      coins: parseInt(localStorage.getItem("stair_coins")) || 0,
       unlockedCubes: JSON.parse(localStorage.getItem("stair_cubes")) || ["alchemist"],
       unlockedStairs: JSON.parse(localStorage.getItem("stair_themes")) || ["aurora"],
       unlockedTrails: JSON.parse(localStorage.getItem("stair_trails")) || ["default", "rainbow"],
@@ -33,13 +31,11 @@
       equippedTrail: localStorage.getItem("stair_eq_trail") || "default",
       equippedEffect: localStorage.getItem("stair_eq_effect") || "default",
       purchasedUpgrades: JSON.parse(localStorage.getItem("stair_upgrades")) || [],
-      claimedChallenges: JSON.parse(localStorage.getItem("stair_challenges")) || [],
       stats
     };
   }
 
   function persistProgressState(progress) {
-    localStorage.setItem("stair_coins", progress.coins);
     localStorage.setItem("stair_cubes", JSON.stringify(progress.unlockedCubes));
     localStorage.setItem("stair_themes", JSON.stringify(progress.unlockedStairs));
     localStorage.setItem("stair_trails", JSON.stringify(progress.unlockedTrails));
@@ -50,7 +46,8 @@
     localStorage.setItem("stair_eq_effect", progress.equippedEffect);
     localStorage.setItem("stair_upgrades", JSON.stringify(progress.purchasedUpgrades));
     localStorage.setItem("stair_stats", JSON.stringify(progress.stats));
-    localStorage.setItem("stair_challenges", JSON.stringify(progress.claimedChallenges));
+    localStorage.removeItem("stair_coins");
+    localStorage.removeItem("stair_challenges");
   }
 
   window.STAIR_STORAGE = {
