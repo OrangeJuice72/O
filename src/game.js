@@ -410,16 +410,16 @@
     function getStageStartConfig(isPlayable) {
       if (deviceProfile.tier === "mobile") {
         return {
-          x: Math.max(24, width * 0.08),
-          y: isPlayable ? Math.max(120, height * 0.16) : 80,
-          startIndex: 3
+          x: Math.max(24, width * 0.08) - 540,
+          y: (isPlayable ? Math.max(120, height * 0.16) : 80) - 200,
+          startIndex: 8
         };
       }
 
       return {
-        x: 0,
-        y: isPlayable ? INITIAL_STAGE_OFFSET_Y : 80,
-        startIndex: 10
+        x: -980,
+        y: (isPlayable ? INITIAL_STAGE_OFFSET_Y : 80) - 320,
+        startIndex: 18
       };
     }
 
@@ -470,7 +470,7 @@
     let perkSelectionsTaken = new Set();
     let activePerks = [];
     let pendingPerkStep = null;
-    let perkCharges = { bump: 0, slam: 0, relaunch: 0 };
+    let perkCharges = { bump: 0, slam: 0, stabilizer: 0, recovery_warp: 0, relaunch: 0 };
     let startPos = { x: 0, y: 0 };
     let launchOrigin = { x: 0, y: 0 };
     let recentStairContact = { id: null, time: 0 };
@@ -506,6 +506,9 @@
     const OPENING_LAUNCH_SCALE = 1.12;
     const PERFECT_CHARGE_MIN = 0.68;
     const PERFECT_CHARGE_MAX = 0.84;
+    const STABILIZER_SPEED_FLOOR = 14;
+    const STABILIZER_SPEED_CEILING = 24;
+    const STAIR_CLEANUP_BUFFER_SCREENS = 5;
 
     let isDragging = false;
     let dragPointerId = null;
@@ -873,6 +876,12 @@
       if (perkCharges.slam > 0) {
         actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('slam')">Slam ${perkCharges.slam}</button>`);
       }
+      if (perkCharges.stabilizer > 0) {
+        actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('stabilizer')">Stabilizer ${perkCharges.stabilizer}</button>`);
+      }
+      if (perkCharges.recovery_warp > 0) {
+        actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('recovery_warp')">Warp ${perkCharges.recovery_warp}</button>`);
+      }
       if (perkCharges.relaunch > 0) {
         actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('relaunch')">Re-Launch ${perkCharges.relaunch}</button>`);
       }
@@ -889,7 +898,35 @@
     }
 
     function hasRescuePerkCharge() {
-      return (perkCharges.bump || 0) > 0 || (perkCharges.slam || 0) > 0 || (perkCharges.relaunch || 0) > 0;
+      return (perkCharges.bump || 0) > 0 ||
+        (perkCharges.slam || 0) > 0 ||
+        (perkCharges.stabilizer || 0) > 0 ||
+        (perkCharges.recovery_warp || 0) > 0 ||
+        (perkCharges.relaunch || 0) > 0;
+    }
+
+    function findNearestSpecialStair() {
+      if (!cube) return null;
+      const activeStairs = stairsArr.filter(stair =>
+        stair?.plugin?.effect &&
+        stair.plugin.effect !== "normal" &&
+        Composite.get(world, stair.id, "body")
+      );
+      if (!activeStairs.length) return null;
+
+      let nearest = null;
+      let nearestDistance = Infinity;
+      for (const stair of activeStairs) {
+        const dx = stair.position.x - cube.position.x;
+        const dy = stair.position.y - cube.position.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance < nearestDistance) {
+          nearest = stair;
+          nearestDistance = distance;
+        }
+      }
+
+      return nearest;
     }
 
     function usePerkAction(id) {
@@ -921,6 +958,62 @@
         showPopup("SLAM", cube.position.x, cube.position.y - 34, "#ffd166");
         setStatus("Slam Attack", "danger");
         shake(7);
+        return true;
+      }
+
+      if (id === "stabilizer" && perkCharges.stabilizer > 0) {
+        const liveDirection = cube.speed > 0.3 ? Vector.normalise(cube.velocity) : null;
+        const rememberedDirection = Vector.normalise({
+          x: Math.max(0.45, lastLaunchVector.x || 0.7),
+          y: Math.min(lastLaunchVector.y || -0.72, -0.34)
+        });
+        const blendSource = liveDirection || rememberedDirection;
+        const targetDirection = Vector.normalise({
+          x: Math.max(0.65, (blendSource.x || 0) * 0.35 + rememberedDirection.x * 0.9),
+          y: Math.min(-0.28, (blendSource.y || 0) * 0.5 + rememberedDirection.y * 0.72)
+        });
+        const targetSpeed = Math.min(
+          STABILIZER_SPEED_CEILING,
+          Math.max(STABILIZER_SPEED_FLOOR, cube.speed * 0.82)
+        );
+
+        Body.setVelocity(cube, Vector.mult(targetDirection, targetSpeed));
+        Body.setAngularVelocity(cube, cube.angularVelocity * 0.12);
+        lastLaunchVector = targetDirection;
+        reserveLandingCorridor(cube.position.x, targetDirection.x * targetSpeed, width * 4.5);
+        consumePerkCharge("stabilizer");
+        showPopup("STABLE", cube.position.x, cube.position.y - 34, "#8fd3ff");
+        setStatus("Stabilized", "live");
+        shake(4);
+        updateHud();
+        return true;
+      }
+
+      if (id === "recovery_warp" && perkCharges.recovery_warp > 0) {
+        const targetStair = findNearestSpecialStair();
+        if (!targetStair) return false;
+
+        const arrival = {
+          x: targetStair.position.x,
+          y: targetStair.position.y - 96
+        };
+        const fallVelocity = {
+          x: Math.max(-4, Math.min(4, cube.velocity.x * 0.18)),
+          y: Math.max(8, Math.min(16, Math.abs(cube.velocity.y) * 0.35 + 8))
+        };
+
+        Body.setPosition(cube, arrival);
+        Body.setVelocity(cube, fallVelocity);
+        Body.setAngularVelocity(cube, 0);
+        launchOrigin = { ...arrival };
+        recentStairContact = { id: null, time: 0 };
+        portalGraceUntil = performance.now() + 300;
+        reserveLandingCorridor(targetStair.position.x, 12, width * 4.5);
+        consumePerkCharge("recovery_warp");
+        showPopup("WARP", cube.position.x, cube.position.y - 34, "#bfa6ff");
+        setStatus("Recovery Warp", "live");
+        shake(6);
+        updateHud();
         return true;
       }
 
@@ -1251,6 +1344,8 @@
       perkSelectionsTaken.add(id);
       if (id === "bump") perkCharges.bump += 2;
       if (id === "slam") perkCharges.slam += 3;
+      if (id === "stabilizer") perkCharges.stabilizer += 2;
+      if (id === "recovery_warp") perkCharges.recovery_warp += 1;
       if (id === "relaunch") perkCharges.relaunch += 1;
       runStats.perkChoices++;
       document.getElementById("perk-panel").style.display = "none";
@@ -1307,7 +1402,7 @@
       bestComboThisRun = 1;
       launchWasPerfect = false;
       activePerks = [];
-      perkCharges = { bump: 0, slam: 0, relaunch: 0 };
+      perkCharges = { bump: 0, slam: 0, stabilizer: 0, recovery_warp: 0, relaunch: 0 };
       perkSelectionsTaken = new Set();
       pendingPerkStep = null;
       runStats = {
@@ -1499,7 +1594,7 @@
     function cleanupOldStairs() {
       if (!cube) return;
       const cubeX = cube.position.x;
-      const buffer = width * 3;
+      const buffer = width * STAIR_CLEANUP_BUFFER_SCREENS;
       for (let i = stairsArr.length - 1; i >= 0; i--) {
         const s = stairsArr[i];
         if (s.position.x < cubeX - buffer) {

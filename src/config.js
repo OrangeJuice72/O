@@ -31,6 +31,8 @@
     perkPool: [
       { id: "bump", name: "Bump", desc: "Gain 2 bump charges. Each one gives a quick 55% launch-strength shove.", badge: "Active" },
       { id: "slam", name: "Slam", desc: "Gain 3 slams. Tap/click while airborne to drive straight down.", badge: "Active" },
+      { id: "stabilizer", name: "Stabilizer", desc: "Gain 2 stabilizer charges. While airborne, tap to straighten out and recover from wild launches.", badge: "Active" },
+      { id: "recovery_warp", name: "Recovery Warp", desc: "Gain 1 warp charge. Teleport to the nearest special stair and drop back into the run.", badge: "Recovery" },
       { id: "anti_stick", name: "Anti-Stick", desc: "Sticky stairs no longer slow you down.", badge: "Safety" },
       { id: "relaunch", name: "Re-Launch", desc: "Gain 1 re-launch. Freeze in place and fire again from your current spot.", badge: "Active" }
     ]
