@@ -2,7 +2,7 @@
   const config = {
     cubeSkins: [
       { id: "alchemist", name: "Alchemist", cost: 0, desc: "Arcane lab-grade plating.", texture: "assets/block/alchemist.png", accent: "#f4d35e", spriteScale: 1.22 },
-      { id: "caution", name: "Caution Tape", cost: 140, desc: "Industrial hazard styling.", texture: "assets/block/caution.png", accent: "#ffd166", spriteScale: 1.22 },
+      { id: "caution", name: "Caution Tape", cost: 140, desc: "Industrial hazard styling.", texture: "assets/block/caution.png", ballTexture: "assets/block/caution_ball.png", accent: "#ffd166", spriteScale: 1.22 },
       { id: "crystals", name: "Crystal Core", cost: 180, desc: "Faceted gem energy.", texture: "assets/block/crystals.png", accent: "#8fd3ff", spriteScale: 1.22 },
       { id: "gum", name: "Bubble Gum", cost: 130, desc: "Soft candy-coated finish.", texture: "assets/block/gum.png", accent: "#ff8cc6", spriteScale: 1.22 },
       { id: "wooden", name: "Wooden Crate", cost: 160, desc: "Old-school crate texture.", texture: "assets/block/wooden.png", accent: "#d6a36c", spriteScale: 1.22 }

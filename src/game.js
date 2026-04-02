@@ -11,6 +11,9 @@
     const SPEED_MPH_SCALE = 2.35;
     const AIR_SPARK_SPEED_THRESHOLD = 40;
     const TRAIL_SPEED_THRESHOLD = 20;
+    const BALL_FORM_DURATION_MS = 15000;
+    const BALL_FORM_SPEED_BOOST = 1.08;
+    const BALL_FORM_FRICTION_AIR = BASE_CUBE_CLASS.frictionAir * 0.8;
     const ASSET_CACHE_BUSTER = `v=${Date.now()}`;
 
     const Engine = Matter.Engine,
@@ -237,6 +240,65 @@
       return cubeSkins.find(item => item.id === id) || cubeSkins[0];
     }
 
+    function hasBallVariant(skin) {
+      return !!skin?.ballTexture;
+    }
+
+    function isBallFormActive() {
+      return ballFormUntil > performance.now();
+    }
+
+    function getActiveCubeSkin(id = equippedCube) {
+      const skin = getCubeSkin(id);
+      if (!skin || !isBallFormActive() || !hasBallVariant(skin)) return skin;
+      return { ...skin, texture: skin.ballTexture };
+    }
+
+    function applyBallFormPhysics(body) {
+      if (!body) return;
+      body.frictionAir = isBallFormActive() ? BALL_FORM_FRICTION_AIR : BASE_CUBE_CLASS.frictionAir;
+    }
+
+    function clearBallForm(applySkin = true) {
+      ballFormUntil = 0;
+      if (ballFormTimer) {
+        clearTimeout(ballFormTimer);
+        ballFormTimer = null;
+      }
+      if (cube) applyBallFormPhysics(cube);
+      if (applySkin && cube) applyCubeSkinToBody(cube, getActiveCubeSkin());
+    }
+
+    function activateBallForm(duration = BALL_FORM_DURATION_MS) {
+      const skin = getCubeSkin();
+      if (!hasBallVariant(skin)) {
+        showPopup("NO BALL", cube?.position.x || startPos.x, (cube?.position.y || startPos.y) - 34, "#ffd166");
+        setStatus("No Ball Form", "idle");
+        return false;
+      }
+
+      ballFormUntil = performance.now() + duration;
+      if (ballFormTimer) clearTimeout(ballFormTimer);
+      getCubeSpriteImage(skin.ballTexture);
+      if (cube) {
+        applyBallFormPhysics(cube);
+        Body.setVelocity(cube, {
+          x: cube.velocity.x * BALL_FORM_SPEED_BOOST,
+          y: cube.velocity.y
+        });
+        applyCubeSkinToBody(cube, getActiveCubeSkin());
+      }
+      ballFormTimer = setTimeout(() => {
+        ballFormUntil = 0;
+        ballFormTimer = null;
+        if (cube) {
+          applyBallFormPhysics(cube);
+          applyCubeSkinToBody(cube, getActiveCubeSkin());
+        }
+      }, duration);
+      return true;
+    }
+
     function isRainbowCubeSkin(skin) {
       return skin && skin.id === "rainbow";
     }
@@ -278,11 +340,9 @@
         img.addEventListener("load", () => {
           cubeTextureReady[texture] = true;
           if (!cube) return;
-          const activeSkin = getCubeSkin();
+          const activeSkin = getActiveCubeSkin();
           if (!activeSkin || activeSkin.texture !== texture) return;
-          const spriteConfig = getCubeSpriteRenderConfig(activeSkin);
-          if (!spriteConfig) return;
-          cube.render.sprite = spriteConfig;
+          applyCubeSkinToBody(cube, activeSkin);
         });
         img.addEventListener("error", () => {
           cubeTextureReady[texture] = false;
@@ -315,7 +375,7 @@
       };
     }
 
-    function applyCubeSkinToBody(body, skin = getCubeSkin()) {
+    function applyCubeSkinToBody(body, skin = getActiveCubeSkin()) {
       if (!body || !skin) return;
 
       if (isSpriteCubeSkin(skin)) {
@@ -337,7 +397,7 @@
     }
 
     function createCubeBody(position, classCfg = BASE_CUBE_CLASS) {
-      const activeCubeSkin = getCubeSkin();
+      const activeCubeSkin = getActiveCubeSkin();
       let initialColor = isRainbowCubeSkin(activeCubeSkin) ? `hsl(0, 100%, 65%)` : activeCubeSkin.id;
       if (isSpriteCubeSkin(activeCubeSkin)) {
         getCubeSpriteImage(activeCubeSkin.texture);
@@ -359,11 +419,12 @@
         }
       });
 
+      applyBallFormPhysics(body);
       applyCubeSkinToBody(body, activeCubeSkin);
       return body;
     }
 
-    function drawCubeOverlay(ctx, skin = getCubeSkin()) {
+    function drawCubeOverlay(ctx, skin = getActiveCubeSkin()) {
       if (!cube || !skin) return;
       const isSprite = isSpriteCubeSkin(skin);
       const size = 30 * (isSprite ? (skin.spriteScale || 1) : 1);
@@ -473,6 +534,8 @@
     let perkCharges = { bump: 0, slam: 0, stabilizer: 0, recovery_warp: 0, relaunch: 0 };
     let startPos = { x: 0, y: 0 };
     let launchOrigin = { x: 0, y: 0 };
+    let ballFormUntil = 0;
+    let ballFormTimer = null;
     let recentStairContact = { id: null, time: 0 };
     let slamLockUntil = 0;
     let portalGraceUntil = 0;
@@ -1225,7 +1288,7 @@
       if (!unlockedCubes.includes(id)) {
         unlockedCubes.push(id);
         equippedCube = id;
-        if (cube) applyCubeSkinToBody(cube, getCubeSkin(id));
+        if (cube) applyCubeSkinToBody(cube, getActiveCubeSkin(id));
         saveGame();
         renderShopContent();
       }
@@ -1233,7 +1296,7 @@
 
     function equipCube(id) {
       equippedCube = id;
-      if (cube) applyCubeSkinToBody(cube, getCubeSkin(id));
+      if (cube) applyCubeSkinToBody(cube, getActiveCubeSkin(id));
       saveGame();
       renderShopContent();
     }
@@ -1397,6 +1460,7 @@
       refreshInRunControls();
 
       currentSteps = 0;
+      clearBallForm(false);
       combo = 1;
       comboStreak = 0;
       bestComboThisRun = 1;
@@ -1482,6 +1546,8 @@
             stairColor = "#94a3ff"; effectLabel = "portal"; stroke = "rgba(148, 163, 255, 0.8)";
           } else if (randType < 0.94) {
             stairColor = "#d7ecff"; effectLabel = "glass"; stroke = "rgba(215, 236, 255, 0.92)"; meta.breakable = true;
+          } else if (randType < 0.98) {
+            stairColor = "#ffd166"; effectLabel = "ball"; stroke = "rgba(255, 209, 102, 0.86)";
           } else {
             stairColor = "#c27dff"; effectLabel = "roulette"; stroke = "rgba(194, 125, 255, 0.85)";
           }
@@ -1641,6 +1707,7 @@
       trailSampleTick = 0;
       launchCharge = 0;
       launchOrigin = { x: 0, y: 0 };
+      clearBallForm(false);
       recentStairContact = { id: null, time: 0 };
       slamLockUntil = 0;
       portalGraceUntil = 0;
@@ -2051,7 +2118,7 @@
         return;
       }
 
-        if (effect === "glass") {
+      if (effect === "glass") {
           if (!brokenStairs.has(stair.id)) {
             brokenStairs.add(stair.id);
             stair.plugin.breakTimer = 16;
@@ -2068,8 +2135,17 @@
         return;
       }
 
+      if (effect === "ball") {
+        if (activateBallForm()) {
+          showPopup("BALL MODE", stair.position.x, stair.position.y - 36, "#ffd166");
+          setStatus("Ball Form 15s", "live");
+          shake(5);
+        }
+        return;
+      }
+
       if (effect === "roulette") {
-        const options = ["dash", "chaos", "bouncy", "sticky", "ice", "portal", "gravity", "glass"];
+        const options = ["dash", "chaos", "bouncy", "sticky", "ice", "portal", "gravity", "glass", "ball"];
         const chosen = options[Math.floor(Math.random() * options.length)];
         showPopup(`? ${chosen.toUpperCase()}`, stair.position.x, stair.position.y - 48, "#e0b3ff");
         applySpecialEffect(stair, chosen, "roulette");
