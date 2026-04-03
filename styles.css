@@ -72,9 +72,8 @@
       inset: 0;
       background-image: url("assets/bg/night_sky.png");
       background-repeat: no-repeat;
-      background-position: center calc(50% + var(--bg-shift, 0px));
+      background-position: center center;
       background-size: cover;
-      will-change: background-position;
     }
 
     #game-background::before {

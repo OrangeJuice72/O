@@ -14,6 +14,8 @@
     const BALL_FORM_DURATION_MS = 15000;
     const BALL_FORM_SPEED_BOOST = 1.08;
     const BALL_FORM_FRICTION_AIR = BASE_CUBE_CLASS.frictionAir * 0.8;
+    const SLOPES_DURATION_MS = 10000;
+    const SLOPES_ANGLE = 17 * Math.PI / 180;
     const ASSET_CACHE_BUSTER = `v=${Date.now()}`;
 
     const Engine = Matter.Engine,
@@ -254,19 +256,34 @@
       return { ...skin, texture: skin.ballTexture };
     }
 
+    function finishBallForm(applySkin = true) {
+      ballFormUntil = 0;
+      ballFormRemainingMs = 0;
+      if (ballFormTimer) {
+        clearTimeout(ballFormTimer);
+        ballFormTimer = null;
+      }
+      if (cube) {
+        syncCubeBodyShape();
+        applyBallFormPhysics(cube);
+      }
+      if (applySkin && cube) applyCubeSkinToBody(cube, getActiveCubeSkin());
+    }
+
+    function scheduleBallFormTimeout(duration) {
+      ballFormRemainingMs = duration;
+      ballFormUntil = performance.now() + duration;
+      if (ballFormTimer) clearTimeout(ballFormTimer);
+      ballFormTimer = setTimeout(() => finishBallForm(true), duration);
+    }
+
     function applyBallFormPhysics(body) {
       if (!body) return;
       body.frictionAir = isBallFormActive() ? BALL_FORM_FRICTION_AIR : BASE_CUBE_CLASS.frictionAir;
     }
 
     function clearBallForm(applySkin = true) {
-      ballFormUntil = 0;
-      if (ballFormTimer) {
-        clearTimeout(ballFormTimer);
-        ballFormTimer = null;
-      }
-      if (cube) applyBallFormPhysics(cube);
-      if (applySkin && cube) applyCubeSkinToBody(cube, getActiveCubeSkin());
+      finishBallForm(applySkin);
     }
 
     function activateBallForm(duration = BALL_FORM_DURATION_MS) {
@@ -277,10 +294,10 @@
         return false;
       }
 
-      ballFormUntil = performance.now() + duration;
-      if (ballFormTimer) clearTimeout(ballFormTimer);
+      scheduleBallFormTimeout(duration);
       getCubeSpriteImage(skin.ballTexture);
       if (cube) {
+        syncCubeBodyShape();
         applyBallFormPhysics(cube);
         Body.setVelocity(cube, {
           x: cube.velocity.x * BALL_FORM_SPEED_BOOST,
@@ -288,15 +305,84 @@
         });
         applyCubeSkinToBody(cube, getActiveCubeSkin());
       }
-      ballFormTimer = setTimeout(() => {
+      return true;
+    }
+
+    function isSlopesActive() {
+      return slopesUntil > performance.now();
+    }
+
+    function applySlopeStateToStair(stair) {
+      if (!stair?.plugin || stair.plugin.breakTimer != null || !Composite.get(world, stair.id, "body")) return;
+      const angle = isSlopesActive() ? SLOPES_ANGLE : 0;
+      stair.plugin.targetAngle = angle;
+      Body.setAngle(stair, angle);
+    }
+
+    function applySlopeStateToAllStairs() {
+      stairsArr.forEach(stair => applySlopeStateToStair(stair));
+    }
+
+    function finishSlopes() {
+      slopesUntil = 0;
+      slopesRemainingMs = 0;
+      if (slopesTimer) {
+        clearTimeout(slopesTimer);
+        slopesTimer = null;
+      }
+      applySlopeStateToAllStairs();
+    }
+
+    function scheduleSlopesTimeout(duration) {
+      slopesRemainingMs = duration;
+      slopesUntil = performance.now() + duration;
+      if (slopesTimer) clearTimeout(slopesTimer);
+      slopesTimer = setTimeout(() => finishSlopes(), duration);
+    }
+
+    function clearSlopes() {
+      finishSlopes();
+    }
+
+    function activateSlopes(duration = SLOPES_DURATION_MS) {
+      scheduleSlopesTimeout(duration);
+      applySlopeStateToAllStairs();
+    }
+
+    function pauseTimedEffects() {
+      if (isBallFormActive()) {
+        ballFormRemainingMs = Math.max(0, ballFormUntil - performance.now());
+        if (ballFormTimer) {
+          clearTimeout(ballFormTimer);
+          ballFormTimer = null;
+        }
         ballFormUntil = 0;
-        ballFormTimer = null;
+      }
+
+      if (isSlopesActive()) {
+        slopesRemainingMs = Math.max(0, slopesUntil - performance.now());
+        if (slopesTimer) {
+          clearTimeout(slopesTimer);
+          slopesTimer = null;
+        }
+        slopesUntil = 0;
+      }
+    }
+
+    function resumeTimedEffects() {
+      if (ballFormRemainingMs > 0) {
+        scheduleBallFormTimeout(ballFormRemainingMs);
         if (cube) {
+          syncCubeBodyShape();
           applyBallFormPhysics(cube);
           applyCubeSkinToBody(cube, getActiveCubeSkin());
         }
-      }, duration);
-      return true;
+      }
+
+      if (slopesRemainingMs > 0) {
+        scheduleSlopesTimeout(slopesRemainingMs);
+        applySlopeStateToAllStairs();
+      }
     }
 
     function isRainbowCubeSkin(skin) {
@@ -396,7 +482,7 @@
       }
     }
 
-    function createCubeBody(position, classCfg = BASE_CUBE_CLASS) {
+    function createCubeBody(position, classCfg = BASE_CUBE_CLASS, forceBallShape = isBallFormActive()) {
       const activeCubeSkin = getActiveCubeSkin();
       let initialColor = isRainbowCubeSkin(activeCubeSkin) ? `hsl(0, 100%, 65%)` : activeCubeSkin.id;
       if (isSpriteCubeSkin(activeCubeSkin)) {
@@ -404,31 +490,62 @@
         initialColor = "rgba(0,0,0,0)";
       }
 
-      const body = Bodies.rectangle(position.x, position.y, 30, 30, {
+      const bodyOptions = {
         label: "cube",
         restitution: classCfg.restitution,
         friction: 0.01,
         frictionAir: classCfg.frictionAir,
         density: classCfg.density,
-        chamfer: isSpriteCubeSkin(activeCubeSkin) ? undefined : { radius: 7 },
         render: {
           fillStyle: initialColor,
           strokeStyle: isSpriteCubeSkin(activeCubeSkin) ? "rgba(0,0,0,0)" : "rgba(255,255,255,0.9)",
           lineWidth: isSpriteCubeSkin(activeCubeSkin) ? 0 : 2.2,
           sprite: isSpriteCubeSkin(activeCubeSkin) ? (getCubeSpriteRenderConfig(activeCubeSkin) || { ...EMPTY_SPRITE }) : { ...EMPTY_SPRITE }
         }
-      });
+      };
+
+      if (!forceBallShape) {
+        bodyOptions.chamfer = isSpriteCubeSkin(activeCubeSkin) ? undefined : { radius: 7 };
+      }
+
+      const body = forceBallShape
+        ? Bodies.circle(position.x, position.y, 15, bodyOptions)
+        : Bodies.rectangle(position.x, position.y, 30, 30, bodyOptions);
 
       applyBallFormPhysics(body);
       applyCubeSkinToBody(body, activeCubeSkin);
       return body;
     }
 
+    function syncCubeBodyShape() {
+      if (!cube) return;
+      const shouldBeBall = isBallFormActive();
+      const isBall = !!cube.circleRadius;
+      if (shouldBeBall === isBall) {
+        applyBallFormPhysics(cube);
+        applyCubeSkinToBody(cube, getActiveCubeSkin());
+        return;
+      }
+
+      const replacement = createCubeBody(cube.position, BASE_CUBE_CLASS, shouldBeBall);
+      Body.setAngle(replacement, cube.angle);
+      Body.setVelocity(replacement, cube.velocity);
+      Body.setAngularVelocity(replacement, cube.angularVelocity);
+      if (cube.isStatic) Body.setStatic(replacement, true);
+
+      Composite.remove(world, cube);
+      cube = replacement;
+      Composite.add(world, cube);
+      if (elastic) elastic.bodyB = cube;
+      applyBallFormPhysics(cube);
+      applyCubeSkinToBody(cube, getActiveCubeSkin());
+    }
+
     function drawCubeOverlay(ctx, skin = getActiveCubeSkin()) {
       if (!cube || !skin) return;
       const isSprite = isSpriteCubeSkin(skin);
       const size = 30 * (isSprite ? (skin.spriteScale || 1) : 1);
-      const radius = isSprite ? 4 : 7;
+      const radius = cube.circleRadius ? size / 2 : (isSprite ? 4 : 7);
       const fill = isRainbowCubeSkin(skin) ? `hsl(${(gameTick * 3) % 360}, 100%, 65%)` : (isSprite ? (skin.accent || "#cfd8ff") : skin.id);
       const stroke = isSprite ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.9)";
       const sprite = isSprite ? getCubeSpriteImage(skin.texture) : null;
@@ -439,7 +556,11 @@
       ctx.rotate(cube.angle);
       if (!isSprite || !textureReady) {
         ctx.beginPath();
-        ctx.roundRect(-size / 2, -size / 2, size, size, radius);
+        if (cube.circleRadius) {
+          ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
+        } else {
+          ctx.roundRect(-size / 2, -size / 2, size, size, radius);
+        }
         ctx.fillStyle = fill;
         ctx.fill();
         ctx.lineWidth = isSprite ? 1.6 : 2.2;
@@ -531,11 +652,15 @@
     let perkSelectionsTaken = new Set();
     let activePerks = [];
     let pendingPerkStep = null;
-    let perkCharges = { bump: 0, slam: 0, stabilizer: 0, recovery_warp: 0, relaunch: 0 };
+    let perkCharges = { bump: 0, slam: 0, stabilizer: 0, recovery_warp: 0, relaunch: 0, slopes: 0 };
     let startPos = { x: 0, y: 0 };
     let launchOrigin = { x: 0, y: 0 };
     let ballFormUntil = 0;
     let ballFormTimer = null;
+    let ballFormRemainingMs = 0;
+    let slopesUntil = 0;
+    let slopesTimer = null;
+    let slopesRemainingMs = 0;
     let recentStairContact = { id: null, time: 0 };
     let slamLockUntil = 0;
     let portalGraceUntil = 0;
@@ -713,15 +838,7 @@
     }
 
     function updateGameBackgroundPan() {
-      if (document.body.dataset.screen !== "game" || !cube) {
-        document.documentElement.style.setProperty("--bg-shift", "0px");
-        return;
-      }
-
-      const verticalDelta = cube.position.y - startPos.y;
-      const maxShift = Math.min(height * 0.22, 180);
-      const shift = Math.max(-maxShift, Math.min(maxShift, verticalDelta * 0.08));
-      document.documentElement.style.setProperty("--bg-shift", `${shift.toFixed(1)}px`);
+      document.documentElement.style.setProperty("--bg-shift", "0px");
     }
 
     function getRenderPixelRatio() {
@@ -942,6 +1059,9 @@
       if (perkCharges.stabilizer > 0) {
         actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('stabilizer')">Stabilizer ${perkCharges.stabilizer}</button>`);
       }
+      if (perkCharges.slopes > 0) {
+        actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('slopes')">Slopes ${perkCharges.slopes}</button>`);
+      }
       if (perkCharges.recovery_warp > 0) {
         actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('recovery_warp')">Warp ${perkCharges.recovery_warp}</button>`);
       }
@@ -964,6 +1084,7 @@
       return (perkCharges.bump || 0) > 0 ||
         (perkCharges.slam || 0) > 0 ||
         (perkCharges.stabilizer || 0) > 0 ||
+        (perkCharges.slopes || 0) > 0 ||
         (perkCharges.recovery_warp || 0) > 0 ||
         (perkCharges.relaunch || 0) > 0;
     }
@@ -1047,6 +1168,16 @@
         consumePerkCharge("stabilizer");
         showPopup("STABLE", cube.position.x, cube.position.y - 34, "#8fd3ff");
         setStatus("Stabilized", "live");
+        shake(4);
+        updateHud();
+        return true;
+      }
+
+      if (id === "slopes" && perkCharges.slopes > 0) {
+        consumePerkCharge("slopes");
+        activateSlopes();
+        showPopup("SLOPES", cube.position.x, cube.position.y - 34, "#ffd79a");
+        setStatus("Slopes 10s", "live");
         shake(4);
         updateHud();
         return true;
@@ -1383,6 +1514,7 @@
       const list = document.getElementById("perk-list");
       const picks = getPerkChoices();
       if (!picks.length) return;
+      pauseTimedEffects();
       perkPaused = true;
       engine.timing.timeScale = 0;
       setCanvasInput(false);
@@ -1409,11 +1541,13 @@
       if (id === "slam") perkCharges.slam += 3;
       if (id === "stabilizer") perkCharges.stabilizer += 2;
       if (id === "recovery_warp") perkCharges.recovery_warp += 1;
+      if (id === "slopes") perkCharges.slopes += 1;
       if (id === "relaunch") perkCharges.relaunch += 1;
       runStats.perkChoices++;
       document.getElementById("perk-panel").style.display = "none";
       perkPaused = false;
       pendingPerkStep = null;
+      resumeTimedEffects();
       engine.timing.timeScale = isPaused ? 0 : 1;
       setCanvasInput(true);
       updatePerkActionButtons();
@@ -1466,7 +1600,7 @@
       bestComboThisRun = 1;
       launchWasPerfect = false;
       activePerks = [];
-      perkCharges = { bump: 0, slam: 0, stabilizer: 0, recovery_warp: 0, relaunch: 0 };
+      perkCharges = { bump: 0, slam: 0, stabilizer: 0, recovery_warp: 0, relaunch: 0, slopes: 0 };
       perkSelectionsTaken = new Set();
       pendingPerkStep = null;
       runStats = {
@@ -1497,6 +1631,8 @@
     function togglePause() {
       if (gameOver || document.getElementById("hud").style.display !== "block" || perkPaused) return;
       isPaused = !isPaused;
+      if (isPaused) pauseTimedEffects();
+      else resumeTimedEffects();
       engine.timing.timeScale = isPaused ? 0 : 1;
       document.getElementById("pause-panel").style.display = isPaused ? "block" : "none";
       setCanvasInput(!isPaused);
@@ -1580,8 +1716,11 @@
         phase: Math.random() * Math.PI * 2,
         range: 18 + Math.random() * 25,
         effect: effectLabel,
+        targetAngle: 0,
         ...meta
       };
+
+      applySlopeStateToStair(stair);
 
       return { stair, stepWidth };
     }
@@ -1708,6 +1847,7 @@
       launchCharge = 0;
       launchOrigin = { x: 0, y: 0 };
       clearBallForm(false);
+      clearSlopes();
       recentStairContact = { id: null, time: 0 };
       slamLockUntil = 0;
       portalGraceUntil = 0;
