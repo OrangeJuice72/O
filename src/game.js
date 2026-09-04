@@ -39,6 +39,8 @@
     let equippedTrail = progress.equippedTrail;
     let equippedEffect = progress.equippedEffect;
     let purchasedUpgrades = progress.purchasedUpgrades;
+    let shards = progress.shards;
+    let gameSettings = progress.settings;
     let shopTab = "skins";
 
     const validCubeIds = new Set(cubeSkins.map(item => item.id));
@@ -61,6 +63,8 @@
         equippedTrail,
         equippedEffect,
         purchasedUpgrades,
+        shards,
+        settings: gameSettings,
         stats
       });
       updateRecordDisplays();
@@ -74,11 +78,61 @@
 
     function updateRecordDisplays() {
       document.getElementById("menu-best-steps").innerText = stats.bestSteps;
+      document.getElementById("menu-high-score").innerText = Math.round(stats.highScore || 0).toLocaleString();
       document.getElementById("menu-fastest-speed").innerText = Math.round(stats.fastestSpeed || 0);
       document.getElementById("menu-furthest-distance").innerText = Math.round(stats.furthestDistance || 0);
+      document.getElementById("menu-shards").innerText = shards;
+      const shopBalance = document.getElementById("shop-balance");
+      if (shopBalance) shopBalance.innerText = shards;
       const hudBest = document.getElementById("hud-best-steps");
       if (hudBest) hudBest.innerText = stats.bestSteps;
       document.getElementById("game-over-best-steps").innerText = stats.bestSteps;
+    }
+
+    let audioContext = null;
+    function playTone(frequency, duration = 0.07, type = "sine", volume = 0.035, delay = 0) {
+      if (!gameSettings.soundEnabled) return;
+      try {
+        audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+        const startAt = audioContext.currentTime + delay;
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, startAt);
+        oscillator.frequency.exponentialRampToValueAtTime(Math.max(70, frequency * 0.82), startAt + duration);
+        gain.gain.setValueAtTime(volume, startAt);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start(startAt);
+        oscillator.stop(startAt + duration);
+      } catch (_) {}
+    }
+
+    function playLandingSound(isSpecial = false) {
+      playTone(isSpecial ? 520 : 300 + Math.min(combo, 8) * 22, 0.06, isSpecial ? "triangle" : "sine", 0.025);
+      if (isSpecial) playTone(760, 0.08, "sine", 0.018, 0.035);
+    }
+
+    function applyMotionPreference() {
+      document.body.classList.toggle("reduced-motion", gameSettings.reducedMotion);
+      const soundToggle = document.getElementById("sound-toggle");
+      const motionToggle = document.getElementById("motion-toggle");
+      if (soundToggle) soundToggle.textContent = `Sound: ${gameSettings.soundEnabled ? "On" : "Off"}`;
+      if (motionToggle) motionToggle.textContent = `Motion: ${gameSettings.reducedMotion ? "Reduced" : "Full"}`;
+    }
+
+    function toggleSound() {
+      gameSettings.soundEnabled = !gameSettings.soundEnabled;
+      if (gameSettings.soundEnabled) playTone(520, 0.09, "sine", 0.035);
+      applyMotionPreference();
+      queueSave(0);
+    }
+
+    function toggleReducedMotion() {
+      gameSettings.reducedMotion = !gameSettings.reducedMotion;
+      applyMotionPreference();
+      queueSave(0);
     }
 
     const cubeSpriteCache = {};
@@ -108,6 +162,14 @@
 
     function randomRange(min, max) {
       return min + Math.random() * (max - min);
+    }
+
+    function colorWithAlpha(color, alpha) {
+      if (!color || color[0] !== "#") return color;
+      const hex = color.slice(1);
+      const normalized = hex.length === 3 ? hex.split("").map(char => char + char).join("") : hex;
+      const value = Number.parseInt(normalized, 16);
+      return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`;
     }
 
     function scheduleNextCloudSpawn(now = performance.now(), fast = false) {
@@ -724,6 +786,61 @@
       furthestDistance: 0
     };
 
+    let runScore = 0;
+    let flow = 0;
+    let earnedShards = 0;
+    let activeContract = null;
+    let contractComplete = false;
+    let coachTimer = null;
+
+    const RUN_CONTRACTS = [
+      { id: "steps", title: "Stair Seeker", copy: target => `Land on ${target} unique stairs`, target: 18, reward: 14, value: () => currentSteps },
+      { id: "special", title: "Wild Route", copy: target => `Trigger ${target} special stairs`, target: 4, reward: 16, value: () => runStats.specialHits },
+      { id: "combo", title: "Keep The Flow", copy: target => `Build a x${target} landing combo`, target: 4, reward: 18, value: () => bestComboThisRun },
+      { id: "distance", title: "Cloud Chaser", copy: target => `Travel ${target} feet in one run`, target: 80, reward: 16, value: () => Math.floor(runStats.furthestDistance || 0) }
+    ];
+
+    function chooseRunContract() {
+      const index = Math.max(0, (stats.gamesPlayed - 1) % RUN_CONTRACTS.length);
+      activeContract = RUN_CONTRACTS[index];
+      contractComplete = false;
+      updateContract();
+    }
+
+    function updateContract() {
+      if (!activeContract) return;
+      const value = Math.min(activeContract.target, Math.max(0, Math.floor(activeContract.value())));
+      const ratio = value / activeContract.target;
+      document.getElementById("objective-title").textContent = activeContract.title;
+      document.getElementById("objective-copy").textContent = activeContract.copy(activeContract.target);
+      document.getElementById("objective-reward").textContent = `+${activeContract.reward} ✦`;
+      document.getElementById("objective-current").textContent = value;
+      document.getElementById("objective-target").textContent = activeContract.target;
+      document.getElementById("objective-fill").style.width = `${ratio * 100}%`;
+      const panel = document.getElementById("run-objective");
+      if (!contractComplete && value >= activeContract.target) {
+        contractComplete = true;
+        panel.classList.add("complete");
+        showHeroMoment("CONTRACT COMPLETE", "#ffe3a8", "rgba(255,209,102,0.2)");
+        playTone(520, 0.12, "triangle", 0.035);
+        playTone(780, 0.16, "triangle", 0.03, 0.08);
+      }
+    }
+
+    function showCoach(title, copy, duration = 0) {
+      const coach = document.getElementById("control-coach");
+      coach.querySelector("strong").textContent = title;
+      coach.querySelector("span").textContent = copy;
+      coach.classList.add("visible");
+      clearTimeout(coachTimer);
+      if (duration) coachTimer = setTimeout(() => coach.classList.remove("visible"), duration);
+    }
+
+    function hideCoach() {
+      clearTimeout(coachTimer);
+      document.getElementById("control-coach").classList.remove("visible");
+    }
+
     function setCanvasInput(enabled) {
       render.canvas.style.pointerEvents = enabled ? "auto" : "none";
     }
@@ -766,6 +883,8 @@
       document.getElementById("steps-display").innerText = currentSteps;
       const speedDisplay = document.getElementById("speed-display");
       const distanceDisplay = document.getElementById("distance-display");
+      const scoreDisplay = document.getElementById("score-display");
+      const comboDisplay = document.getElementById("combo-display");
       const currentSpeed = cube ? cube.speed * SPEED_MPH_SCALE : 0;
       const liveSpeed = cube && speedTrackingActive ? currentSpeed : 0;
       const distanceFeet = cube ? Math.max(0, (cube.position.x - startPos.x) / WORLD_UNITS_PER_FOOT) : 0;
@@ -773,6 +892,12 @@
       runStats.furthestDistance = Math.max(runStats.furthestDistance || 0, distanceFeet);
       if (speedDisplay) speedDisplay.innerText = Math.round(liveSpeed);
       if (distanceDisplay) distanceDisplay.innerText = Math.round(runStats.furthestDistance || 0);
+      if (scoreDisplay) scoreDisplay.innerText = Math.round(runScore).toLocaleString();
+      if (comboDisplay) comboDisplay.innerText = `x${combo}`;
+      const flowFill = document.getElementById("flow-fill");
+      if (flowFill) flowFill.style.width = `${Math.max(4, flow)}%`;
+      document.getElementById("run-label").textContent = `Run // ${String(Math.max(1, stats.gamesPlayed)).padStart(2, "0")}`;
+      updateContract();
       updateRecordDisplays();
     }
 
@@ -1051,22 +1176,22 @@
 
       const actions = [];
       if (perkCharges.bump > 0) {
-        actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('bump')">Bump ${perkCharges.bump}</button>`);
+        actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('bump')"><kbd>1</kbd> Bump <b>${perkCharges.bump}</b></button>`);
       }
       if (perkCharges.slam > 0) {
-        actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('slam')">Slam ${perkCharges.slam}</button>`);
+        actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('slam')"><kbd>2</kbd> Slam <b>${perkCharges.slam}</b></button>`);
       }
       if (perkCharges.stabilizer > 0) {
-        actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('stabilizer')">Stabilizer ${perkCharges.stabilizer}</button>`);
+        actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('stabilizer')"><kbd>3</kbd> Stabilize <b>${perkCharges.stabilizer}</b></button>`);
       }
       if (perkCharges.slopes > 0) {
-        actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('slopes')">Slopes ${perkCharges.slopes}</button>`);
+        actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('slopes')"><kbd>4</kbd> Slopes <b>${perkCharges.slopes}</b></button>`);
       }
       if (perkCharges.recovery_warp > 0) {
-        actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('recovery_warp')">Warp ${perkCharges.recovery_warp}</button>`);
+        actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('recovery_warp')"><kbd>5</kbd> Warp <b>${perkCharges.recovery_warp}</b></button>`);
       }
       if (perkCharges.relaunch > 0) {
-        actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('relaunch')">Re-Launch ${perkCharges.relaunch}</button>`);
+        actions.push(`<button class="mini-btn perk-action" onclick="usePerkAction('relaunch')"><kbd>6</kbd> Re-launch <b>${perkCharges.relaunch}</b></button>`);
       }
 
       wrap.innerHTML = actions.join("");
@@ -1254,6 +1379,7 @@
       document.getElementById("settings-panel").style.display = "block";
       document.getElementById("main-menu").style.display = "none";
       setCanvasInput(false);
+      applyMotionPreference();
       refreshInRunControls();
     }
 
@@ -1340,7 +1466,7 @@
     }
 
     function switchShopTab(tab) {
-      const allowedTabs = ["skins", "trails"];
+      const allowedTabs = ["skins", "stairs", "trails", "effects"];
       shopTab = allowedTabs.includes(tab) ? tab : "skins";
       document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
       const activeBtn = document.getElementById(`tab-${shopTab}`);
@@ -1358,7 +1484,7 @@
       content.innerHTML = "";
 
       if (shopTab === "skins") {
-        title.innerText = "Cube Skins";
+        title.innerText = "Block Skins";
         cubeSkins.forEach(item => {
           content.innerHTML += createShopCard({
             name: item.name,
@@ -1366,8 +1492,25 @@
             owned: unlockedCubes.includes(item.id),
             equipped: equippedCube === item.id,
             preview: getCubePreviewMarkup(item),
+            cost: item.cost,
             buyAction: `buyCube('${item.id}')`,
             equipAction: `equipCube('${item.id}')`
+          });
+        });
+      }
+
+      if (shopTab === "stairs") {
+        title.innerText = "Stair Themes";
+        stairThemes.forEach(item => {
+          content.innerHTML += createShopCard({
+            name: item.name,
+            desc: item.desc,
+            owned: unlockedStairs.includes(item.id),
+            equipped: equippedStair === item.id,
+            preview: `<div class="card-preview stair-preview" style="--stair-a:${item.c1};--stair-b:${item.c2}"><i></i><i></i><i></i></div>`,
+            cost: item.cost,
+            buyAction: `buyStair('${item.id}')`,
+            equipAction: `equipStair('${item.id}')`
           });
         });
       }
@@ -1381,22 +1524,39 @@
             owned: unlockedTrails.includes(item.id),
             equipped: equippedTrail === item.id,
             preview: getTrailPreviewMarkup(item),
+            cost: item.cost,
             buyAction: `buyTrail('${item.id}')`,
             equipAction: `equipTrail('${item.id}')`
           });
         });
       }
 
+      if (shopTab === "effects") {
+        title.innerText = "Impact Bursts";
+        effectItems.forEach(item => {
+          content.innerHTML += createShopCard({
+            name: item.name,
+            desc: item.desc,
+            owned: unlockedEffects.includes(item.id),
+            equipped: equippedEffect === item.id,
+            preview: `<div class="card-preview burst-preview" style="--burst:${item.color}"><i></i><i></i><i></i><i></i></div>`,
+            cost: item.cost,
+            buyAction: `buyEffect('${item.id}')`,
+            equipAction: `equipEffect('${item.id}')`
+          });
+        });
+      }
+
     }
 
-    function createShopCard({ name, desc, owned, equipped, preview, buyAction, equipAction, ownedLabel }) {
+    function createShopCard({ name, desc, owned, equipped, preview, cost = 0, buyAction, equipAction, ownedLabel }) {
       let button = "";
       if (equipped) {
         button = `<button class="shop-btn equipped-btn" disabled>${ownedLabel || "Equipped"}</button>`;
       } else if (owned) {
         button = `<button class="shop-btn equip-btn" onclick="${equipAction}">Equip</button>`;
       } else {
-        button = `<button class="shop-btn" onclick="${buyAction}">Get</button>`;
+        button = `<button class="shop-btn" onclick="${buyAction}">${cost} ✦</button>`;
       }
 
       return `
@@ -1415,14 +1575,38 @@
       `;
     }
 
+    function setShopNotice(message, tone = "info") {
+      const notice = document.getElementById("shop-notice");
+      notice.textContent = message;
+      notice.dataset.tone = tone;
+      clearTimeout(setShopNotice.timer);
+      setShopNotice.timer = setTimeout(() => { notice.textContent = ""; }, 2200);
+    }
+
+    function purchaseItem(item, ownedList, onPurchase) {
+      if (!item || ownedList.includes(item.id)) return false;
+      if (shards < item.cost) {
+        setShopNotice(`You need ${item.cost - shards} more stars. Finish a run contract to earn them.`, "error");
+        playTone(120, 0.12, "sawtooth", 0.02);
+        return false;
+      }
+      shards -= item.cost;
+      ownedList.push(item.id);
+      onPurchase();
+      playTone(440, 0.08, "triangle", 0.03);
+      playTone(660, 0.12, "triangle", 0.025, 0.06);
+      setShopNotice(`${item.name} unlocked and equipped.`, "success");
+      saveGame();
+      renderShopContent();
+      return true;
+    }
+
     function buyCube(id) {
-      if (!unlockedCubes.includes(id)) {
-        unlockedCubes.push(id);
+      const item = cubeSkins.find(entry => entry.id === id);
+      purchaseItem(item, unlockedCubes, () => {
         equippedCube = id;
         if (cube) applyCubeSkinToBody(cube, getActiveCubeSkin(id));
-        saveGame();
-        renderShopContent();
-      }
+      });
     }
 
     function equipCube(id) {
@@ -1433,12 +1617,10 @@
     }
 
     function buyStair(id) {
-      if (!unlockedStairs.includes(id)) {
-        unlockedStairs.push(id);
+      const item = stairThemes.find(entry => entry.id === id);
+      purchaseItem(item, unlockedStairs, () => {
         equippedStair = id;
-        saveGame();
-        renderShopContent();
-      }
+      });
     }
 
     function equipStair(id) {
@@ -1448,12 +1630,10 @@
     }
 
     function buyTrail(id) {
-      if (!unlockedTrails.includes(id)) {
-        unlockedTrails.push(id);
+      const item = trailItems.find(entry => entry.id === id);
+      purchaseItem(item, unlockedTrails, () => {
         equippedTrail = id;
-        saveGame();
-        renderShopContent();
-      }
+      });
     }
 
     function equipTrail(id) {
@@ -1463,12 +1643,10 @@
     }
 
     function buyEffect(id) {
-      if (!unlockedEffects.includes(id)) {
-        unlockedEffects.push(id);
+      const item = effectItems.find(entry => entry.id === id);
+      purchaseItem(item, unlockedEffects, () => {
         equippedEffect = id;
-        saveGame();
-        renderShopContent();
-      }
+      });
     }
 
     function equipEffect(id) {
@@ -1568,6 +1746,9 @@
       document.getElementById("pause-panel").style.display = "none";
       document.getElementById("hud").style.display = "none";
       document.getElementById("top-controls").style.display = "none";
+      document.getElementById("run-objective").classList.remove("visible", "complete");
+      document.getElementById("run-objective").style.display = "none";
+      hideCoach();
       updateLegendVisibility();
       document.getElementById("main-menu").style.display = "block";
       setCanvasInput(false);
@@ -1594,6 +1775,9 @@
       refreshInRunControls();
 
       currentSteps = 0;
+      runScore = 0;
+      flow = 0;
+      earnedShards = 0;
       clearBallForm(false);
       combo = 1;
       comboStreak = 0;
@@ -1621,10 +1805,17 @@
       if (distanceDisplay) distanceDisplay.innerText = "0";
 
       stats.gamesPlayed++;
+      chooseRunContract();
+      document.getElementById("run-objective").classList.add("visible");
+      document.getElementById("run-objective").classList.remove("complete");
+      document.getElementById("run-objective").style.display = "block";
+      showCoach("Pull back to launch", "Drag the block, aim along the stairs, then release");
       queueSave();
       updatePerkActionButtons();
       setStatus("Aiming", "idle");
       generateLevel(true);
+      playTone(260, 0.08, "triangle", 0.025);
+      playTone(390, 0.12, "triangle", 0.02, 0.06);
       updateHud();
     }
 
@@ -1647,13 +1838,14 @@
       let y = currentY + stepHeight / 2;
 
       let stairColor = index % 2 === 0 ? activeTheme.c1 : activeTheme.c2;
+      const themeColor = stairColor;
       let effectLabel = "normal";
       let stroke = activeTheme.stroke || "rgba(255,255,255,0.16)";
       let meta = { moving: false, breakable: false, portalTarget: null, gravityMode: null, flash: 0, telegraph: 0, glow: activeTheme.glow || "rgba(255,255,255,0.14)" };
 
       if (isPlayable && index > startIndex + 3) {
-        let specialChance = 0.24;
-        if (index > 200) specialChance += 0.06;
+        const runStepNumber = Math.max(0, index - startIndex);
+        let specialChance = Math.min(0.34, 0.16 + runStepNumber * 0.0024);
 
         if (Math.random() < specialChance) {
           const randType = Math.random();
@@ -1691,9 +1883,9 @@
       }
 
       if (effectLabel === "normal") {
-        stairColor = "rgba(214, 236, 255, 0.12)";
-        stroke = "rgba(212, 245, 255, 0.42)";
-        meta.glow = "rgba(170, 232, 255, 0.18)";
+        stairColor = colorWithAlpha(themeColor, 0.32);
+        stroke = activeTheme.stroke || "rgba(212, 245, 255, 0.68)";
+        meta.glow = activeTheme.glow || "rgba(170, 232, 255, 0.24)";
       }
 
       let stair = Bodies.rectangle(x, y, stepWidth, stepHeight, {
@@ -1709,10 +1901,12 @@
 
       stair.plugin = {
         originalColor: stairColor,
+        themeColor,
         originalStroke: stroke,
         homeX: x,
         homeY: y,
         index: index,
+        runStep: Math.max(0, index - startIndex + 1),
         phase: Math.random() * Math.PI * 2,
         range: 18 + Math.random() * 25,
         effect: effectLabel,
@@ -2004,10 +2198,15 @@
       if (launchWasPerfect) {
         runStats.perfectLaunch = true;
         stats.perfectLaunches++;
+        runScore += 150;
+        flow = Math.min(100, flow + 20);
         showPopup("PERFECT", cube.position.x, cube.position.y - 30, "#8effff");
         spawnBurst(cube.position.x, cube.position.y, "#8effff", 14, 5);
         queueSave();
       }
+
+      showCoach("Steer in the air", "Use A / D or ← / → to nudge your flight", 4200);
+      playTone(launchWasPerfect ? 680 : 330, 0.11, "triangle", 0.035);
 
       setTimeout(() => {
         if (elastic) {
@@ -2098,7 +2297,15 @@
     });
 
     const keys = {};
-    window.addEventListener("keydown", (e) => { keys[e.key.toLowerCase()] = true; });
+    const perkHotkeys = { "1": "bump", "2": "slam", "3": "stabilizer", "4": "slopes", "5": "recovery_warp", "6": "relaunch" };
+    window.addEventListener("keydown", (e) => {
+      const key = e.key.toLowerCase();
+      keys[key] = true;
+      if (e.repeat) return;
+      if (key === "p" || key === "escape") togglePause();
+      if (perkHotkeys[key]) usePerkAction(perkHotkeys[key]);
+      if (key === "r" && gameOver) startGame();
+    });
     window.addEventListener("keyup", (e) => { keys[e.key.toLowerCase()] = false; });
 
     function getComboWindow() {
@@ -2117,6 +2324,13 @@
       bestComboThisRun = Math.max(bestComboThisRun, combo);
       runStats.bestCombo = Math.max(runStats.bestCombo, combo);
       stats.highestCombo = Math.max(stats.highestCombo, combo);
+      const flowMultiplier = 1 + Math.floor(flow / 25) * 0.25;
+      const points = Math.round((baseScore * 25 + (isSpecial ? 35 : 0)) * combo * flowMultiplier);
+      runScore += points;
+      flow = Math.min(100, flow + 7 + combo * 2 + (isSpecial ? 10 : 0));
+      if (isSpecial || combo >= 3) showPopup(`+${points}`, x, y - 48, isSpecial ? "#ffe3a8" : "#bdeeff");
+      playLandingSound(isSpecial);
+      if (navigator.vibrate && !gameSettings.reducedMotion) navigator.vibrate(isSpecial ? 18 : 8);
 
       if (combo >= 3) {
         const comboText = combo >= 10 ? `UNREAL x${combo}` : combo >= 7 ? `WOW x${combo}` : combo >= 5 ? `SICK x${combo}` : `COMBO x${combo}`;
@@ -2315,29 +2529,45 @@
 
       document.getElementById("hud").style.display = "none";
       document.getElementById("top-controls").style.display = "none";
+      document.getElementById("run-objective").style.display = "none";
+      hideCoach();
       updateLegendVisibility();
       document.getElementById("perk-panel").style.display = "none";
       document.getElementById("game-over").style.display = "block";
       refreshInRunControls();
 
+      const isNewBest = currentSteps > (stats.bestSteps || 0);
+      const isHighScore = runScore > (stats.highScore || 0);
       const title = document.getElementById("game-over-title");
-      title.innerText = "RUN OVER";
+      title.innerText = isNewBest || isHighScore ? "NEW RECORD" : "RUN OVER";
       title.style.color = "#ffcfb2";
 
       document.getElementById("final-steps").innerText = currentSteps;
+      document.getElementById("final-score").innerText = Math.round(runScore).toLocaleString();
       document.getElementById("best-combo-run").innerText = "x" + bestComboThisRun;
+
+      earnedShards = 4 + Math.floor(currentSteps / 4) + Math.floor(runScore / 600) + (contractComplete ? activeContract.reward : 0);
+      shards += earnedShards;
+      document.getElementById("stars-earned").innerText = `+${earnedShards} ✦`;
+      const contractValue = activeContract ? Math.min(activeContract.target, Math.floor(activeContract.value())) : 0;
+      document.getElementById("contract-result").innerHTML = contractComplete
+        ? `<strong>Contract complete</strong><span>${activeContract.title} · +${activeContract.reward} bonus stars</span>`
+        : `<strong>Contract progress</strong><span>${activeContract.title} · ${contractValue}/${activeContract.target}</span>`;
 
       stats.lifetimeSteps += currentSteps;
       stats.bestSteps = Math.max(stats.bestSteps, currentSteps);
+      stats.highScore = Math.max(stats.highScore || 0, runScore);
       stats.fastestSpeed = Math.max(stats.fastestSpeed || 0, runStats.fastestSpeed || 0);
       stats.furthestDistance = Math.max(stats.furthestDistance || 0, runStats.furthestDistance || 0);
 
       const breakdown = document.getElementById("run-breakdown");
       breakdown.innerHTML = `
-        <div>Special Stairs: ${runStats.specialHits} | Perks Chosen: ${runStats.perkChoices}</div>
-        <div>Fastest Speed: ${Math.round(runStats.fastestSpeed || 0)} | Furthest Distance: ${Math.round(runStats.furthestDistance || 0)}</div>
+        <div><b>${runStats.specialHits}</b> special stairs <span>·</span> <b>${runStats.perkChoices}</b> perks</div>
+        <div><b>${Math.round(runStats.fastestSpeed || 0)}</b> mph <span>·</span> <b>${Math.round(runStats.furthestDistance || 0)}</b> feet</div>
       `;
 
+      playTone(isNewBest || isHighScore ? 520 : 180, 0.18, "triangle", 0.035);
+      if (isNewBest || isHighScore) playTone(780, 0.24, "sine", 0.028, 0.12);
       saveGame();
       updateHud();
     }
@@ -2345,6 +2575,13 @@
     Events.on(engine, "beforeUpdate", function() {
       if (isPaused || perkPaused) return;
       gameTick++;
+      if (isLaunched && !gameOver) {
+        flow = Math.max(0, flow - (gameSettings.reducedMotion ? 0.04 : 0.075));
+        if (combo > 1 && performance.now() - lastHitTime > getComboWindow()) {
+          combo = 1;
+          comboStreak = 0;
+        }
+      }
 
       if (isRainbowCubeSkin(getCubeSkin()) && cube) {
         cube.render.fillStyle = `hsl(${(gameTick * 3) % 360}, 100%, 65%)`;
@@ -2586,6 +2823,7 @@
         const height = stair.bounds.max.y - stair.bounds.min.y;
         const glow = stair.plugin.glow || "rgba(255,255,255,0.14)";
         const baseFill = stair.plugin.originalColor || "#5b4de0";
+        const themeFill = stair.plugin.themeColor || baseFill;
         const edgeTint = stair.plugin.originalStroke || "rgba(255,255,255,0.5)";
         const isNormalStair = stair.plugin.effect === "normal";
         const shellAlpha = isNormalStair ? 0.84 : 0.98;
@@ -2598,13 +2836,34 @@
         ctx.save();
         ctx.translate(stair.position.x, stair.position.y);
 
+        ctx.save();
+        ctx.shadowColor = isNormalStair ? colorWithAlpha(themeFill, 0.46) : glow;
+        ctx.shadowBlur = isNormalStair ? 18 : 24;
+        drawRoundedRectPath(ctx, -width / 2 + 2, -height / 2 + 7, width - 4, height + 3, 10);
+        const underside = ctx.createLinearGradient(0, -height / 2, 0, height / 2 + 10);
+        underside.addColorStop(0, colorWithAlpha(themeFill, isNormalStair ? 0.38 : 0.58));
+        underside.addColorStop(0.62, "rgba(25, 10, 67, 0.88)");
+        underside.addColorStop(1, "rgba(8, 4, 31, 0.96)");
+        ctx.fillStyle = underside;
+        ctx.globalAlpha = 0.9;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.moveTo(-width / 2 + 10, height / 2 + 5);
+        ctx.lineTo(width / 2 - 10, height / 2 + 5);
+        ctx.strokeStyle = isNormalStair ? colorWithAlpha(themeFill, 0.7) : edgeTint;
+        ctx.lineWidth = 2.2;
+        ctx.globalAlpha = 0.72;
+        ctx.stroke();
+        ctx.restore();
+
         const shellGradient = ctx.createLinearGradient(-width / 2, -height / 2, width / 2, height / 2);
         if (isNormalStair) {
-          shellGradient.addColorStop(0, "rgba(255, 255, 255, 0.26)");
-          shellGradient.addColorStop(0.2, "rgba(225, 244, 255, 0.16)");
-          shellGradient.addColorStop(0.44, "rgba(185, 224, 255, 0.08)");
-          shellGradient.addColorStop(0.78, "rgba(124, 173, 255, 0.08)");
-          shellGradient.addColorStop(1, "rgba(84, 112, 214, 0.12)");
+          shellGradient.addColorStop(0, "rgba(255, 255, 255, 0.42)");
+          shellGradient.addColorStop(0.14, colorWithAlpha(themeFill, 0.54));
+          shellGradient.addColorStop(0.52, colorWithAlpha(themeFill, 0.32));
+          shellGradient.addColorStop(0.82, "rgba(62, 34, 135, 0.34)");
+          shellGradient.addColorStop(1, "rgba(18, 9, 56, 0.66)");
         } else {
           shellGradient.addColorStop(0, "rgba(246, 252, 255, 0.6)");
           shellGradient.addColorStop(0.14, baseFill);
@@ -2675,7 +2934,7 @@
         ctx.beginPath();
         ctx.moveTo(-width / 2 + 10, -height / 2 + 8);
         ctx.lineTo(width / 2 - 10, -height / 2 + 8);
-        ctx.strokeStyle = isNormalStair ? "rgba(222, 245, 255, 0.64)" : edgeTint;
+        ctx.strokeStyle = isNormalStair ? edgeTint : edgeTint;
         ctx.lineWidth = isNormalStair ? 2.2 : 2.8;
         ctx.globalAlpha = isNormalStair ? 0.78 : 0.96;
         ctx.stroke();
@@ -2683,7 +2942,7 @@
         ctx.beginPath();
         ctx.moveTo(-width / 2 + 16, height * 0.08);
         ctx.lineTo(width / 2 - 22, height * 0.08);
-        ctx.strokeStyle = isNormalStair ? "rgba(255, 183, 245, 0.44)" : edgeTint;
+        ctx.strokeStyle = isNormalStair ? colorWithAlpha(themeFill, 0.84) : edgeTint;
         ctx.lineWidth = 1.8;
         ctx.globalAlpha = accentAlpha;
         ctx.stroke();
@@ -2757,7 +3016,24 @@
     }
 
     function drawStepIdentifiers(ctx) {
-      return;
+      stairsArr.forEach(stair => {
+        const step = stair.plugin?.runStep;
+        if (!step || step % 10 !== 0 || !isWorldPointVisible(stair.position.x, stair.position.y, 100)) return;
+        ctx.save();
+        ctx.translate(stair.position.x, stair.position.y - 34);
+        ctx.fillStyle = "rgba(24, 10, 72, 0.82)";
+        ctx.strokeStyle = "rgba(255, 225, 175, 0.9)";
+        ctx.lineWidth = 1.5;
+        drawRoundedRectPath(ctx, -24, -13, 48, 26, 13);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#ffe4bd";
+        ctx.font = "900 12px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`STEP ${step}`, 0, 1);
+        ctx.restore();
+      });
     }
 
     Events.on(render, "afterRender", function() {
@@ -3034,6 +3310,7 @@
     Runner.run(runner, engine);
     Render.run(render);
     applyDeviceProfile();
+    applyMotionPreference();
     normalizeUiCopy();
     setCanvasInput(false);
     updateRecordDisplays();
@@ -3091,7 +3368,7 @@
       usePerkAction,
       startGame,
       showMainMenu,
-      togglePause
+      togglePause,
+      toggleSound,
+      toggleReducedMotion
     });
-
-

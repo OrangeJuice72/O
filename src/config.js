@@ -1,17 +1,17 @@
 (function() {
   const config = {
     cubeSkins: [
-      { id: "alchemist", name: "Alchemist", cost: 0, desc: "Arcane lab-grade plating.", texture: "assets/block/alchemist.png", accent: "#f4d35e", spriteScale: 1.22 },
-      { id: "caution", name: "Caution Tape", cost: 140, desc: "Industrial hazard styling.", texture: "assets/block/caution.png", ballTexture: "assets/block/caution_ball.png", accent: "#ffd166", spriteScale: 1.22 },
-      { id: "crystals", name: "Crystal Core", cost: 180, desc: "Faceted gem energy.", texture: "assets/block/crystals.png", accent: "#8fd3ff", spriteScale: 1.22 },
-      { id: "gum", name: "Bubble Gum", cost: 130, desc: "Soft candy-coated finish.", texture: "assets/block/gum.png", accent: "#ff8cc6", spriteScale: 1.22 },
-      { id: "wooden", name: "Wooden Crate", cost: 160, desc: "Old-school crate texture.", texture: "assets/block/wooden.png", accent: "#d6a36c", spriteScale: 1.22 }
+      { id: "alchemist", name: "Astral Alchemist", cost: 0, desc: "Indigo glass wrapped around a living mint core.", texture: "assets/block/alchemist_v3.png", accent: "#76ffe2", spriteScale: 1.16 },
+      { id: "caution", name: "Solar Hazard", cost: 140, desc: "Obsidian armor crossed with molten amber energy.", texture: "assets/block/caution_v3.png", ballTexture: "assets/block/caution_ball_v2.png", accent: "#ffb43b", spriteScale: 1.16 },
+      { id: "crystals", name: "Celestial Prism", cost: 180, desc: "Faceted lavender crystal holding a tiny star.", texture: "assets/block/crystals_v3.png", accent: "#9af5ff", spriteScale: 1.16 },
+      { id: "gum", name: "Nebula Candy", cost: 130, desc: "Rose quartz filled with swirling cosmic gel.", texture: "assets/block/gum_v3.png", accent: "#ff77c8", spriteScale: 1.16 },
+      { id: "wooden", name: "Ancient Starwood", cost: 160, desc: "Carved cosmic timber joined by cyan starlight.", texture: "assets/block/wooden_v3.png", accent: "#48edff", spriteScale: 1.16 }
     ],
     stairThemes: [
-      { id: "aurora", name: "Aurora Deck", cost: 0, c1: "#8f86ff", c2: "#4d2ab8", stroke: "rgba(179, 241, 255, 0.82)", glow: "rgba(246, 156, 255, 0.32)", desc: "Glassy cosmic violet platforms." },
-      { id: "ember", name: "Ember Steel", cost: 90, c1: "#ffb2cc", c2: "#7f41de", stroke: "rgba(255, 231, 205, 0.82)", glow: "rgba(255, 161, 215, 0.3)", desc: "Warm nebula glass with sunset edges." },
-      { id: "glacier", name: "Glacier Run", cost: 180, c1: "#9bb1ff", c2: "#3148cc", stroke: "rgba(169, 246, 255, 0.86)", glow: "rgba(124, 234, 255, 0.34)", desc: "Cool astral glass with cyan shimmer." },
-      { id: "acid_lab", name: "Acid Lab", cost: 220, c1: "#ff9dd8", c2: "#6426b8", stroke: "rgba(255, 224, 196, 0.84)", glow: "rgba(255, 196, 238, 0.32)", desc: "Hot pink cosmic plates with bright energy." }
+      { id: "aurora", name: "Astral Glass", cost: 0, c1: "#8678ff", c2: "#322176", stroke: "rgba(134, 241, 255, 0.92)", glow: "rgba(118, 222, 255, 0.38)", desc: "Deep violet crystal with a cyan-lit edge." },
+      { id: "ember", name: "Sunset Alloy", cost: 90, c1: "#ff927e", c2: "#7d2b91", stroke: "rgba(255, 220, 154, 0.94)", glow: "rgba(255, 135, 168, 0.4)", desc: "Apricot glass framed in warm starlight." },
+      { id: "glacier", name: "Aether Ice", cost: 180, c1: "#5eeaff", c2: "#263aa7", stroke: "rgba(210, 253, 255, 0.96)", glow: "rgba(83, 231, 255, 0.42)", desc: "Cool celestial ice with a white-hot rim." },
+      { id: "acid_lab", name: "Nova Bloom", cost: 220, c1: "#ff64c6", c2: "#5621a6", stroke: "rgba(255, 203, 238, 0.94)", glow: "rgba(255, 90, 212, 0.42)", desc: "Magenta nebula glass charged with violet light." }
     ],
     trailItems: [
       { id: "default", name: "Core Trail", cost: 0, color: "#8b6cff", desc: "Simple energy ribbon." },

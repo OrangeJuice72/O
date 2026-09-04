@@ -6,14 +6,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Stair Drop+" />
-  <meta name="theme-color" content="#08111f" />
+  <meta name="theme-color" content="#24105f" />
   <title>Stair Drop+</title>
-  <link rel="manifest" href="manifest.webmanifest?v=20260321f" />
-  <link rel="icon" type="image/png" sizes="1024x1024" href="icon.png?v=20260321f" />
-  <link rel="apple-touch-icon" sizes="180x180" href="icon.png?v=20260321f" />
-  <link rel="apple-touch-icon-precomposed" href="icon.png?v=20260321f" />
+  <link rel="manifest" href="manifest.webmanifest?v=20260903e" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon_v3.png?v=20260903e" />
+  <link rel="apple-touch-icon" sizes="512x512" href="icon_v3.png?v=20260903e" />
+  <link rel="apple-touch-icon-precomposed" href="icon_v3.png?v=20260903e" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-  <link rel="stylesheet" href="styles.css?v=20260321f" />
+  <link rel="stylesheet" href="styles.css?v=20260903d" />
 </head>
 <body>
   <div class="ambient-orb orb-1"></div>
@@ -23,7 +23,7 @@
 
   <div id="hud" class="glass-panel panel-sheen">
     <div class="hud-topline">
-      <div class="ui-tag hud-tag">Live Run Telemetry</div>
+      <div class="ui-tag hud-tag" id="run-label">Run // 01</div>
       <div id="status-pill">Ready</div>
     </div>
     <div class="compact-hud">
@@ -32,14 +32,29 @@
         <div class="hud-value" id="steps-display">0</div>
       </div>
       <div class="hud-block">
-        <div class="hud-label">Speed</div>
-        <div class="hud-value" id="speed-display">0.0</div>
+        <div class="hud-label">Score</div>
+        <div class="hud-value" id="score-display">0</div>
       </div>
       <div class="hud-block">
-        <div class="hud-label">Distance</div>
-        <div class="hud-value" id="distance-display">0</div>
+        <div class="hud-label">Flow</div>
+        <div class="hud-value"><span id="combo-display">x1</span></div>
       </div>
     </div>
+    <div class="flow-track" aria-label="Flow meter"><div id="flow-fill"></div></div>
+    <div class="hud-footline"><span><b id="speed-display">0</b> mph</span><span><b id="distance-display">0</b> ft</span></div>
+  </div>
+
+  <div id="run-objective" class="glass-panel panel-sheen" aria-live="polite" style="display:none">
+    <div class="objective-kicker">Run contract</div>
+    <div class="objective-row"><strong id="objective-title">First Flight</strong><span id="objective-reward">+12 ✦</span></div>
+    <div id="objective-copy">Land on 15 unique stairs</div>
+    <div class="objective-track"><div id="objective-fill"></div></div>
+    <div class="objective-progress"><span id="objective-current">0</span><span id="objective-target">15</span></div>
+  </div>
+
+  <div id="control-coach" role="status" aria-live="polite">
+    <div class="coach-icon">↙</div>
+    <div><strong>Pull back to launch</strong><span>Drag the block, aim for the stairs, then release</span></div>
   </div>
 
   <div id="top-controls">
@@ -78,7 +93,9 @@
       </div>
 
       <div class="record-card overlay-card">
+        <div class="profile-strip"><span>STAR CACHE</span><strong><span id="menu-shards">160</span> ✦</strong></div>
         <div class="record-row"><span>Best Steps</span><span id="menu-best-steps">0</span></div>
+        <div class="record-row"><span>High Score</span><span id="menu-high-score">0</span></div>
         <div class="record-row"><span>Fastest Speed</span><span id="menu-fastest-speed">0</span></div>
         <div class="record-row"><span>Furthest Distance</span><span id="menu-furthest-distance">0</span></div>
       </div>
@@ -103,6 +120,18 @@
     </div>
     <div class="card-list">
       <div class="info-card">
+        <h4>Audio & Motion</h4>
+        <p>Fine-tune the arcade feedback for your device.</p>
+        <div class="settings-toggles">
+          <button class="secondary-btn setting-toggle" id="sound-toggle" onclick="toggleSound()">Sound: On</button>
+          <button class="secondary-btn setting-toggle" id="motion-toggle" onclick="toggleReducedMotion()">Motion: Full</button>
+        </div>
+      </div>
+      <div class="info-card controls-card">
+        <h4>Controls</h4>
+        <p><kbd>Drag</kbd> launch · <kbd>A</kbd><kbd>D</kbd> steer · <kbd>1–6</kbd> perks · <kbd>P</kbd> pause</p>
+      </div>
+      <div class="info-card">
         <h4>Reset High Stats</h4>
         <p>Clears your saved best steps, fastest speed, furthest distance, best combo, and high score.</p>
         <div style="margin-top:12px;">
@@ -119,17 +148,20 @@
     <div class="shop-header">
       <div class="ui-tag">Customization & Upgrades</div>
       <h2 class="shop-title">Upgrade Bay</h2>
-      <p class="shop-subtitle">Pick your style.</p>
+      <p class="shop-subtitle">Spend stars earned from runs. Balance: <strong><span id="shop-balance">160</span> ✦</strong></p>
     </div>
 
     <div class="shop-tabs">
-      <button class="tab-btn active" onclick="switchShopTab('skins')" id="tab-skins">Skins</button>
+      <button class="tab-btn active" onclick="switchShopTab('skins')" id="tab-skins">Blocks</button>
+      <button class="tab-btn" onclick="switchShopTab('stairs')" id="tab-stairs">Stairs</button>
       <button class="tab-btn" onclick="switchShopTab('trails')" id="tab-trails">Trails</button>
+      <button class="tab-btn" onclick="switchShopTab('effects')" id="tab-effects">Bursts</button>
     </div>
 
     <div class="shop-section">
-      <h3 id="shop-section-title">Cube Skins</h3>
+      <h3 id="shop-section-title">Block Skins</h3>
       <div id="shop-content" class="shop-grid"></div>
+      <div id="shop-notice" aria-live="polite"></div>
     </div>
 
     <div class="menu-actions" style="margin-top:20px;">
@@ -176,10 +208,15 @@
           <div class="result-score">
             Steps
             <span id="final-steps">0</span>
+            <small><b id="final-score">0</b> points</small>
           </div>
         </div>
 
         <div class="card-list result-summary-list">
+          <div class="info-card reward-wrap">
+            Stars earned: <span id="stars-earned">+0 ✦</span>
+          </div>
+          <div class="info-card contract-result" id="contract-result">Contract progress</div>
           <div class="info-card earned-wrap">
             Best Combo: <span id="best-combo-run">x1</span>
           </div>
@@ -197,8 +234,8 @@
     </div>
   </div>
 
-  <script src="src/config.js?v=20260321f"></script>
-  <script src="src/storage.js?v=20260321f"></script>
-  <script src="src/game.js?v=20260321f"></script>
+  <script src="src/config.js?v=20260903e"></script>
+  <script src="src/storage.js?v=20260903a"></script>
+  <script src="src/game.js?v=20260903e"></script>
 </body>
 </html>
